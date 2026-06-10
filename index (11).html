@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Star Chart</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#F1EFE8;min-height:100vh;color:#2C2C2A}
+.screen{display:none;padding:16px;max-width:480px;margin:0 auto}
+.screen.active{display:block;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card{background:#fff;border-radius:16px;border:0.5px solid #E8E6DF;padding:16px;margin-bottom:12px}
+.btn{display:block;width:100%;padding:12px;border-radius:12px;border:1.5px solid #D3D1C7;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;cursor:pointer;background:#fff;color:#2C2C2A;margin-bottom:8px}
+.btn:active{opacity:0.75}
+.btn:last-child{margin-bottom:0}
+.btn-red{background:#FF6B6B;border-color:#FF6B6B;color:#fff}
+.btn-teal{background:#4ECDC4;border-color:#4ECDC4;color:#fff}
+.btn-amber{background:#EF9F27;border-color:#EF9F27;color:#412402}
+.btn-danger{background:#E24B4A;border-color:#E24B4A;color:#fff}
+.btn-purple{background:#7F77DD;border-color:#7F77DD;color:#fff}
+input,select,textarea{width:100%;padding:10px 14px;border:1.5px solid #D3D1C7;border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;background:#F8F7F4;color:#2C2C2A;margin-bottom:10px}
+input:focus,select:focus{outline:none;border-color:#FF6B6B}
+.ptab-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.ptab{flex:1;min-width:0;padding:7px 4px;border:1.5px solid #D3D1C7;border-radius:10px;background:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;color:#888780;text-align:center;white-space:nowrap}
+.ptab.on{background:#FF6B6B;border-color:#FF6B6B;color:#fff}
+.stab-row{display:flex;gap:5px;margin-bottom:12px}
+.stab{flex:1;padding:6px;border:1.5px solid #D3D1C7;border-radius:8px;background:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;color:#888780;text-align:center}
+.stab.on{background:#FF6B6B;border-color:#FF6B6B;color:#fff}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #E8E6DF}
+.row:last-child{border-bottom:none}
+.chk{width:28px;height:28px;border-radius:50%;border:2px solid #D3D1C7;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;transition:all 0.2s}
+.chk.on{background:#4ECDC4;border-color:#4ECDC4;color:#fff}
+.pill{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;flex-shrink:0}
+.p4{background:#CECBF6;color:#26215C}
+.p2{background:#9FE1CB;color:#04342C}
+.p1{background:#C0DD97;color:#173404}
+.p0{background:#D3D1C7;color:#2C2C2A}
+.pr{background:#FAECE7;color:#993C1D}
+.sec-hdr{font-size:11px;font-weight:800;color:#888780;letter-spacing:0.8px;text-transform:uppercase;padding:8px 0 4px}
+.muted{font-size:13px;color:#888780}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.bdg{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:#F8F7F4;border:0.5px solid #E8E6DF;flex:1;min-width:46px}
+.bdg.on{background:#FFF9E6;border-color:#EF9F27}
+.bdg-icon{font-size:20px;line-height:1}
+.bdg-name{font-size:9px;font-weight:700;text-align:center;color:#888780}
+.bdg.on .bdg-name{color:#633806}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:900;display:flex;align-items:center;justify-content:center}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:900;display:flex;align-items:flex-end}
+.sheet{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto}
+.modal{background:#fff;border-radius:20px;padding:28px 20px;max-width:320px;width:90%;text-align:center;border:3px solid #EF9F27}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2C2C2A;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:1000;pointer-events:none;white-space:nowrap}
+.cw{position:fixed;inset:0;pointer-events:none;z-index:950}
+.cp{position:absolute;width:8px;height:8px;border-radius:2px;animation:cf 1.8s ease-in forwards}
+@keyframes cf{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(800deg);opacity:0}}
+.sync{position:fixed;top:0;left:0;right:0;background:#4ECDC4;color:#085041;font-size:12px;font-weight:700;text-align:center;padding:5px;z-index:800;transform:translateY(-40px);transition:transform 0.3s}
+.sync.on{transform:translateY(0)}
+.loading{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+.av{width:40px;height:40px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;cursor:pointer;border:2px solid #E8E6DF}
+.emo-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}
+.emo{font-size:26px;padding:6px;border-radius:8px;border:2px solid transparent;cursor:pointer;text-align:center}
+.emo.on{border-color:#FF6B6B;background:#FFF0F0}
+.pbox{padding:12px;background:#FFF9E6;border:1px solid #EF9F27;border-radius:12px;margin-bottom:8px}
+.bc{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:#E24B4A;color:#fff;border-radius:50%;font-size:9px;font-weight:800;margin-left:3px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading">
+  <div style="font-size:52px;margin-bottom:12px">⭐</div>
+  <div style="font-size:20px;font-weight:800;margin-bottom:6px">Star Chart</div>
+  <div style="color:#888780;font-size:14px" id="load-msg">Loading...</div>
+</div>
+<div id="sync-bar" class="sync">☁️ Saving...</div>
+<div id="cw" class="cw"></div>
+<div id="toast-el" class="toast" style="display:none"></div>
+<div id="main-overlay" class="overlay" style="display:none"></div>
+<div id="sheet-bg" class="sheet-bg" style="display:none"><div class="sheet" id="sheet-body"></div></div>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen">
+  <div style="text-align:center;padding:28px 0 20px">
+    <div style="font-size:50px;margin-bottom:8px">⭐</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:4px">Star Chart</div>
+    <div class="muted">For Nadyaluna &amp; Alyanna</div>
+    <div id="cloud-status" style="font-size:11px;margin-top:6px;color:#4ECDC4;font-weight:700"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:700;color:#888780;margin-bottom:12px;text-align:center">WHO ARE YOU?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <button class="btn" style="padding:14px 8px" onclick="loginKid(0)">
+        <div id="av-login-0" style="width:40px;height:40px;border-radius:50%;background:#EEEDFE;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden"></div>
+        <div style="font-size:12px;font-weight:700" id="name-btn-0">Nadyaluna</div>
+      </button>
+      <button class="btn" style="padding:14px 8px" onclick="loginKid(1)">
+        <div id="av-login-1" style="width:40px;height:40px;border-radius:50%;background:#EEEDFE;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden"></div>
+        <div style="font-size:12px;font-weight:700" id="name-btn-1">Alyanna</div>
+      </button>
+    </div>
+    <button class="btn" onclick="go('s-plog')" style="margin-bottom:0">🔐 Parent login</button>
+  </div>
+</div>
+
+<!-- PARENT LOGIN -->
+<div id="s-plog" class="screen">
+  <div class="top-bar">
+    <button onclick="go('s-login')" style="background:none;border:none;cursor:pointer;font-size:22px">←</button>
+    <div style="font-size:17px;font-weight:700">Parent login</div>
+    <div style="width:24px"></div>
+  </div>
+  <div class="card">
+    <input type="password" id="p-pass" placeholder="Password" onkeydown="if(event.key==='Enter')checkPass()">
+    <p id="p-err" style="color:#E24B4A;font-size:12px;margin-bottom:8px;display:none">Wrong password</p>
+    <button class="btn btn-red" onclick="checkPass()" style="margin-bottom:0">Login</button>
+  </div>
+</div>
+
+<!-- KID SCREEN -->
+<div id="s-kid" class="screen">
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="kid-av" class="av" onclick="openAvatarPicker()"></div>
+      <div>
+        <div style="font-weight:700;font-size:15px" id="kid-name"></div>
+        <div style="font-size:10px;color:#4ECDC4;font-weight:700;cursor:pointer" onclick="openAvatarPicker()">✏️ change avatar</div>
+        <div class="muted" style="font-size:11px" id="kid-date"></div>
+      </div>
+    </div>
+    <button onclick="go('s-login')" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:700;color:#888780">Logout</button>
+  </div>
+  <div id="kid-quote" style="background:#F8F7F4;border:0.5px dashed #D3D1C7;border-radius:14px;padding:11px;text-align:center;font-size:13px;color:#888780;font-style:italic;margin-bottom:12px"></div>
+  <div id="kid-banners"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+    <div class="card" style="text-align:center;padding:10px"><div style="font-size:20px">🔥</div><div style="font-size:20px;font-weight:800;color:#FF6B6B" id="kid-streak">0</div><div class="muted" style="font-size:10px">day streak</div></div>
+    <div class="card" style="text-align:center;padding:10px"><div style="font-size:20px">🤲</div><div style="font-size:20px;font-weight:800;color:#1D9E75" id="kid-solat-streak">0</div><div class="muted" style="font-size:10px">solat streak</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+    <div class="card" style="text-align:center;padding:8px"><div style="font-size:15px">💰</div><div style="font-size:17px;font-weight:800;color:#FF6B6B" id="kid-pts">0</div><div class="muted" style="font-size:9px">balance</div></div>
+    <div class="card" style="text-align:center;padding:8px"><div style="font-size:15px">📅</div><div style="font-size:17px;font-weight:800;color:#7F77DD" id="kid-mpts">0</div><div class="muted" style="font-size:9px" id="kid-mlabel">this month</div></div>
+    <div class="card" style="text-align:center;padding:8px"><div style="font-size:15px">⭐</div><div style="font-size:17px;font-weight:800;color:#633806" id="kid-tpts">0</div><div class="muted" style="font-size:9px">all time</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:15px;font-weight:700">Today's tasks</div>
+      <span class="muted" style="font-size:12px" id="kid-prog"></span>
+    </div>
+    <div id="kid-tasks"></div>
+    <div id="kid-alldone" style="display:none;text-align:center;padding:14px 0"><div style="font-size:36px">🎉</div><div style="font-weight:700;color:#4ECDC4;margin-top:4px">All done! Incredible!</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">Badges</div><div style="display:flex;gap:4px;flex-wrap:wrap" id="kid-badges"></div></div>
+  <div class="card" style="margin-bottom:12px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">Rewards</div><div id="kid-rewards"></div></div>
+  <div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:8px">Granted this month 🎁</div><div id="kid-granted"></div></div>
+</div>
+
+<!-- PARENT SCREEN -->
+<div id="s-parent" class="screen">
+  <div class="top-bar">
+    <div style="font-size:17px;font-weight:800">Parent dashboard</div>
+    <button onclick="go('s-login')" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:700;color:#888780">Logout</button>
+  </div>
+  <div class="ptab-row">
+    <button class="ptab on" onclick="pTab('tasks',this)">Tasks</button>
+    <button class="ptab" onclick="pTab('history',this)">History</button>
+    <button class="ptab" onclick="pTab('battle',this)">Battle</button>
+    <button class="ptab" onclick="pTab('awards',this)">Awards</button>
+    <button class="ptab" onclick="pTab('rewards',this)">Rewards<span id="rdm-badge" class="bc" style="display:none">0</span></button>
+    <button class="ptab" onclick="pTab('reports',this)">Reports</button>
+    <button class="ptab" onclick="pTab('settings',this)">Settings</button>
+  </div>
+
+  <!-- TASKS -->
+  <div id="p-tasks">
+    <div class="stab-row">
+      <button class="stab on" onclick="taskSub('task-list',this)">📋 Tasks</button>
+      <button class="stab" onclick="taskSub('sec-list',this)">🗂 Sections</button>
+    </div>
+    <div id="task-list">
+      <div class="card" style="margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px">Add task</div>
+        <input type="text" id="nt-name" placeholder="Task name">
+        <input type="number" id="nt-pts" min="0" placeholder="Points (e.g. 3)">
+        <select id="nt-sec"></select>
+        <select id="nt-kid">
+          <option value="0">🌙 Nadyaluna only</option>
+          <option value="1">🌸 Alyanna only</option>
+          <option value="2">🌙🌸 Both kids</option>
+        </select>
+        <button class="btn btn-red" onclick="addTask()" style="margin-bottom:0">+ Add task</button>
+      </div>
+      <div class="stab-row">
+        <button class="stab on" id="vtk0" onclick="viewTasks(0,this)">🌙 <span id="vtk0n">Nadyaluna</span></button>
+        <button class="stab" id="vtk1" onclick="viewTasks(1,this)">🌸 <span id="vtk1n">Alyanna</span></button>
+      </div>
+      <div class="card"><div id="admin-tasks"></div></div>
+    </div>
+    <div id="sec-list" style="display:none">
+      <div class="stab-row">
+        <button class="stab on" onclick="secTypeSub('tsec',this)">Task sections</button>
+        <button class="stab" onclick="secTypeSub('rsec',this)">Reward sections</button>
+      </div>
+      <div id="tsec">
+        <div class="card" style="margin-bottom:10px">
+          <input type="text" id="new-tsec" placeholder="New section name">
+          <button class="btn btn-red" onclick="addSec('task')" style="margin-bottom:0">+ Add</button>
+        </div>
+        <div class="card"><div id="tsec-list"></div></div>
+      </div>
+      <div id="rsec" style="display:none">
+        <div class="card" style="margin-bottom:10px">
+          <input type="text" id="new-rsec" placeholder="New section name">
+          <button class="btn btn-teal" onclick="addSec('reward')" style="margin-bottom:0">+ Add</button>
+        </div>
+        <div class="card"><div id="rsec-list"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="p-history" style="display:none">
+    <div class="stab-row">
+      <button class="stab on" id="hk0" onclick="histKid(0,this)">🌙 <span id="hk0n">Nadyaluna</span></button>
+      <button class="stab" id="hk1" onclick="histKid(1,this)">🌸 <span id="hk1n">Alyanna</span></button>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <input type="date" id="hist-date" onchange="loadHist()">
+      <div id="hist-info" style="font-size:12px;color:#888780;margin-top:-6px"></div>
+    </div>
+    <div id="hist-editor" style="display:none">
+      <div class="card" style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:700" id="hist-title"></div>
+          <span id="hist-pill" class="pill p2"></span>
+        </div>
+        <div id="hist-tasks"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <button class="btn btn-red" onclick="saveHist()" style="margin-bottom:0">Save</button>
+        <button class="btn btn-danger" onclick="resetHist()" style="margin-bottom:0">Reset day</button>
+      </div>
+      <div class="card" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">Bonuses</div><div id="hist-bonuses"></div></div>
+      <div class="card" style="margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">Punishments</div><div id="hist-punishments"></div></div>
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">Grant reward for this day</div>
+        <div class="muted" style="font-size:12px;margin-bottom:8px">Deducted immediately, no approval needed.</div>
+        <select id="hist-rew-sel" style="margin-bottom:8px"><option value="">Select reward...</option></select>
+        <button class="btn btn-teal" onclick="parentGrant()" style="margin-bottom:0">✓ Grant</button>
+      </div>
+      <div id="hist-diff" style="display:none" class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">Point change</div>
+        <div id="hist-diff-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BATTLE -->
+  <div id="p-battle" style="display:none">
+    <div class="card" style="margin-bottom:12px"><div style="font-size:15px;font-weight:700;margin-bottom:12px">Monthly battle ⚔️</div><div id="battle-body"></div></div>
+    <div class="card"><button class="btn btn-purple" onclick="testWinner()" style="margin-bottom:0">🏆 Test winner ceremony</button></div>
+  </div>
+
+  <!-- AWARDS -->
+  <div id="p-awards" style="display:none">
+    <div class="stab-row">
+      <button class="stab on" onclick="awardSub('bonus-panel',this)">✨ Bonus</button>
+      <button class="stab" onclick="awardSub('punish-panel',this)">⚡ Punish</button>
+    </div>
+    <div id="bonus-panel">
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Give bonus points</div>
+        <div class="muted" style="font-size:12px;margin-bottom:10px">Does NOT count toward day streak.</div>
+        <div class="stab-row">
+          <button class="stab on" id="bk0" onclick="setKid('bonus',0,this)">🌙 <span id="bk0n">Nadyaluna</span></button>
+          <button class="stab" id="bk1" onclick="setKid('bonus',1,this)">🌸 <span id="bk1n">Alyanna</span></button>
+        </div>
+        <input type="text" id="b-reason" placeholder="Reason (e.g. Helped with laundry)">
+        <input type="date" id="b-date">
+        <input type="number" id="b-pts" min="1" placeholder="Points">
+        <button class="btn btn-amber" onclick="giveBonus()" style="margin-bottom:0">✨ Give bonus</button>
+      </div>
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px">Bonus history</div><div id="bonus-list"></div></div>
+    </div>
+    <div id="punish-panel" style="display:none">
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Give punishment</div>
+        <div class="muted" style="font-size:12px;margin-bottom:10px">Deduct points or lock screentime.</div>
+        <div class="stab-row">
+          <button class="stab on" id="pk0" onclick="setKid('punish',0,this)">🌙 <span id="pk0n">Nadyaluna</span></button>
+          <button class="stab" id="pk1" onclick="setKid('punish',1,this)">🌸 <span id="pk1n">Alyanna</span></button>
+        </div>
+        <select id="p-type" onchange="togglePunishType()">
+          <option value="deduct">Deduct points</option>
+          <option value="screenlock">Lock screentime (X days)</option>
+        </select>
+        <input type="text" id="p-reason" placeholder="Reason">
+        <input type="date" id="p-date">
+        <div id="p-pts-row"><input type="number" id="p-pts" min="1" placeholder="Points to deduct"></div>
+        <div id="p-days-row" style="display:none"><input type="number" id="p-days" min="1" placeholder="Lock for how many days"></div>
+        <button class="btn btn-danger" onclick="givePunish()" style="margin-bottom:0">⚡ Apply</button>
+      </div>
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px">Punishment history</div><div id="punish-list"></div></div>
+    </div>
+  </div>
+
+  <!-- REWARDS -->
+  <div id="p-rewards" style="display:none">
+    <div class="stab-row">
+      <button class="stab on" onclick="rewSub('rew-list',this)">🎁 Rewards</button>
+      <button class="stab" onclick="rewSub('rew-redeem',this)">✓ Redeem<span id="rdm-badge2" class="bc" style="display:none">0</span></button>
+    </div>
+    <div id="rew-list">
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px">Add reward</div>
+        <input type="text" id="nr-name" placeholder="e.g. 30 min screen time">
+        <input type="number" id="nr-pts" min="0" placeholder="Points needed">
+        <select id="nr-sec"></select>
+        <button class="btn btn-teal" onclick="addReward()" style="margin-bottom:0">+ Add reward</button>
+      </div>
+      <div class="card"><div id="admin-rewards"></div></div>
+    </div>
+    <div id="rew-redeem" style="display:none">
+      <div class="card" style="margin-bottom:10px"><div style="font-size:14px;font-weight:700;margin-bottom:10px">Pending approvals</div><div id="pending-list"></div></div>
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:10px">Granted this month</div><div id="granted-hist"></div></div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div id="p-reports" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px">Monthly summary</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="rep-stats"></div>
+      <div id="rep-badges"></div>
+    </div>
+    <button class="btn btn-red" onclick="dlReport()">⬇ Download report</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="p-settings" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">Kid names</div>
+      <label class="muted" style="font-size:12px;display:block;margin-bottom:4px">Kid 1</label>
+      <input type="text" id="s-n0">
+      <label class="muted" style="font-size:12px;display:block;margin-bottom:4px">Kid 2</label>
+      <input type="text" id="s-n1">
+      <button class="btn btn-red" onclick="saveNames()">Save names</button>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">Change password</div>
+      <input type="password" id="s-pass" placeholder="New password">
+      <button class="btn" onclick="changePass()" style="margin-bottom:0">Update</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA='https://qsjdnlzudydhpfdvddqd.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzamRubHp1ZHlkaHBmZHZkZHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTU4NTYsImV4cCI6MjA5NTk5MTg1Nn0.KERP-ucTWsWykTja5T-25FF1S2WFUHZZPs04JQ_DAzU';
+const QUOTES=['You are amazing! 🌟','Champions never quit! 🏆','Allah loves those who work hard! 🤲','Bismillah, crush it! 🌙','Shine bright today! ✨','Every task makes you stronger! 💪','Small steps, big wins! 🚀'];
+const BDEFS=[{id:'f',e:'🥇',n:'First done'},{id:'s3',e:'🔥',n:'3-day streak'},{id:'s7',e:'💎',n:'7-day streak'},{id:'w1',e:'🏅',n:'First week'},{id:'p50',e:'⭐',n:'50 pts'},{id:'solat',e:'🤲',n:'Full solat'},{id:'sp7',e:'🚀',n:'7-day power'},{id:'sol7',e:'🌙',n:'Solat 7-day'},{id:'sol30',e:'💫',n:'Solat 30-day'}];
+const SOLAT=['Shubuh','Dzuhur','Ashar','Maghrib','Isya'];
+const AVEMOJIS=['🌙','🌸','🦁','🐯','🐻','🦊','🐼','🐨','🐸','🦋','🌟','⭐','🌈','🎀','🎮','🚀','🏆','💎','🍭','🎵'];
+
+const SEED={"kids":[{"pts":0,"name":"Nadyaluna","avatar":"","badges":["f","solat","p50"],"streak":0,"history":{"Fri Jun 05 2026":{"pts":11,"tasks":[{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":false},{"p":3,"t":"Shubuh","sec":"Solat","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":false},{"p":3,"t":"Ashar","sec":"Solat","done":false},{"p":3,"t":"Maghrib","sec":"Solat","done":true},{"p":3,"t":"Isya","sec":"Solat","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":true},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":false,"solatComplete":false},"Mon Jun 08 2026":{"pts":15,"tasks":[{"p":1,"t":"Reading Comic Books","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":true},{"p":3,"t":"Shubuh","sec":"Solat","done":true},{"p":3,"t":"Dzuhur","sec":"Solat","done":true},{"p":3,"t":"Ashar","sec":"Solat","done":true},{"p":3,"t":"Maghrib","sec":"Solat","done":false},{"p":3,"t":"Isya","sec":"Solat","done":false},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":true},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":false,"solatComplete":false},"Sat Jun 06 2026":{"pts":19,"tasks":[{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":true},{"p":3,"t":"Shubuh","sec":"Solat","done":true},{"p":3,"t":"Dzuhur","sec":"Solat","done":true},{"p":3,"t":"Ashar","sec":"Solat","done":false},{"p":3,"t":"Maghrib","sec":"Solat","done":true},{"p":3,"t":"Isya","sec":"Solat","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":true},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":false,"solatComplete":false},"Sun Jun 07 2026":{"pts":21,"tasks":[{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":true},{"p":3,"t":"Shubuh","sec":"Solat","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":true},{"p":3,"t":"Ashar","sec":"Solat","done":true},{"p":3,"t":"Maghrib","sec":"Solat","done":true},{"p":3,"t":"Isya","sec":"Solat","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 mins)","sec":"Skills","done":true},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":true}],"bonuses":[{"pts":10,"task":"Clean bike"}],"solatBonus":false,"solatComplete":false},"Thu Jun 04 2026":{"pts":25,"tasks":[{"p":3,"t":"Shubuh","sec":"General","done":false},{"p":2,"t":"Reading Science Books","sec":"General","done":false},{"p":1,"t":"Reading Comic Books","sec":"General","done":true},{"p":2,"t":"Duolingo Language","sec":"General","done":true},{"p":3,"t":"Dzuhur","sec":"General","done":false},{"p":3,"t":"Ashar","sec":"General","done":false},{"p":3,"t":"Maghrib","sec":"General","done":true},{"p":3,"t":"Isya","sec":"General","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"General","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"General","done":false},{"p":2,"t":"Music Lesson","sec":"General","done":true},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"General","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"General","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"General","done":true}],"solatBonus":true,"solatComplete":true},"Tue Jun 09 2026":{"pts":7,"tasks":[{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":true},{"p":3,"t":"Shubuh","sec":"Solat","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":false},{"p":3,"t":"Ashar","sec":"Solat","done":false},{"p":3,"t":"Maghrib","sec":"Solat","done":false},{"p":3,"t":"Isya","sec":"Solat","done":false},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":true},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":false,"solatComplete":false},"Wed Jun 03 2026":{"pts":0,"tasks":[{"p":3,"t":"Shubuh","done":false},{"p":2,"t":"Reading Science Books","done":false},{"p":1,"t":"Reading Comic Books","done":false},{"p":2,"t":"Duolingo Language","done":false},{"p":3,"t":"Dzuhur","done":false},{"p":3,"t":"Ashar","done":false},{"p":3,"t":"Maghrib","done":false},{"p":3,"t":"Isya","done":false},{"p":3,"t":"Math Lesson (min 4 pages)","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","done":false},{"p":2,"t":"Music Lesson","done":false},{"p":2,"t":"Body Exercise","done":false},{"p":3,"t":"Ngaji 2 page Alquran","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","done":false}],"solatBonus":false,"solatComplete":false}},"lastDate":"Wed Jun 10 2026","monthPts":108,"monthWins":0,"solatStreak":0,"solat7Awarded":0,"solat30Awarded":0,"solatBonusToday":false,"streakBonusAwarded":false},{"pts":16,"name":"Alyanna","avatar":"\ud83c\udf38","badges":["f","solat"],"streak":2,"history":{"Fri Jun 05 2026":{"pts":34,"tasks":[{"p":3,"t":"Shubuh","sec":"Solat","done":true},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":true},{"p":3,"t":"Dzuhur","sec":"Solat","done":true},{"p":3,"t":"Ashar","sec":"Solat","done":true},{"p":3,"t":"Maghrib","sec":"Solat","done":true},{"p":3,"t":"Isya","sec":"Solat","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 Mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":true},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":true},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":true,"solatComplete":true},"Mon Jun 08 2026":{"pts":33,"tasks":[{"p":3,"t":"Shubuh","sec":"Solat","done":true},{"p":2,"t":"Reading Science Books","sec":"Reading","done":true},{"p":1,"t":"Reading Comic Books","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":true},{"p":3,"t":"Dzuhur","sec":"Solat","done":true},{"p":3,"t":"Ashar","sec":"Solat","done":true},{"p":3,"t":"Maghrib","sec":"Solat","done":true},{"p":3,"t":"Isya","sec":"Solat","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 Mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":true},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":true,"solatComplete":true},"Sat Jun 06 2026":{"pts":4,"tasks":[{"p":3,"t":"Shubuh","sec":"Solat","done":true},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":false},{"p":3,"t":"Ashar","sec":"Solat","done":false},{"p":3,"t":"Maghrib","sec":"Solat","done":false},{"p":3,"t":"Isya","sec":"Solat","done":false},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 Mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":false},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":false,"solatComplete":false},"Sun Jun 07 2026":{"pts":17,"tasks":[{"p":3,"t":"Shubuh","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":true},{"p":3,"t":"Ashar","sec":"Solat","done":true},{"p":3,"t":"Maghrib","sec":"Solat","done":true},{"p":3,"t":"Isya","sec":"Solat","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 Mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":true}],"bonuses":[{"pts":10,"task":"Clean bike"}],"solatBonus":false,"solatComplete":false},"Thu Jun 04 2026":{"pts":13,"tasks":[{"p":3,"t":"Shubuh","sec":"General","done":false},{"p":2,"t":"Reading Science Books","sec":"General","done":true},{"p":1,"t":"Reading Comic Books","sec":"General","done":true},{"p":2,"t":"Duolingo Language","sec":"General","done":true},{"p":3,"t":"Dzuhur","sec":"General","done":false},{"p":3,"t":"Ashar","sec":"General","done":false},{"p":3,"t":"Maghrib","sec":"General","done":true},{"p":3,"t":"Isya","sec":"General","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"General","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"General","done":false},{"p":2,"t":"Music Lesson","sec":"General","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":true},{"p":3,"t":"Ngaji 2 page Alquran","sec":"General","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"General","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"General","done":false}],"solatBonus":false,"solatComplete":false},"Tue Jun 09 2026":{"pts":25,"tasks":[{"p":3,"t":"Shubuh","sec":"Solat","done":true},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":1,"t":"Reading Comic Books","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":true},{"p":3,"t":"Ashar","sec":"Solat","done":true},{"p":3,"t":"Maghrib","sec":"Solat","done":true},{"p":3,"t":"Isya","sec":"Solat","done":true},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 Mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","sec":"General","done":false},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],"solatBonus":true,"solatComplete":true}},"lastDate":"Wed Jun 10 2026","monthPts":136,"monthWins":1,"solatStreak":2,"solat7Awarded":0,"solat30Awarded":0,"solatBonusToday":false,"streakBonusAwarded":false}],"pass":"samanosuke","tasks":[[{"p":1,"t":"Reading Comic Books","sec":"Reading","done":true},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":false},{"p":3,"t":"Shubuh","sec":"Solat","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":false},{"p":3,"t":"Ashar","sec":"Solat","done":false},{"p":3,"t":"Maghrib","sec":"Solat","done":false},{"p":3,"t":"Isya","sec":"Solat","done":false},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","done":false,"sec":"Health"},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}],[{"p":3,"t":"Shubuh","sec":"Solat","done":false},{"p":2,"t":"Reading Science Books","sec":"Reading","done":false},{"p":1,"t":"Reading Comic Books","sec":"Reading","done":false},{"p":2,"t":"Duolingo Language (min 4 pages)","sec":"Skills","done":false},{"p":3,"t":"Dzuhur","sec":"Solat","done":false},{"p":3,"t":"Ashar","sec":"Solat","done":false},{"p":3,"t":"Maghrib","sec":"Solat","done":false},{"p":3,"t":"Isya","sec":"Solat","done":false},{"p":3,"t":"Math Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Writing Lesson (min 4 pages)","sec":"Skills","done":false},{"p":2,"t":"Music Lesson (min 15 Mins)","sec":"Skills","done":false},{"p":2,"t":"Body Exercise","done":false,"sec":"Health"},{"p":3,"t":"Ngaji 2 page Alquran","sec":"Solat","done":false},{"p":2,"t":"Duolingo Language (extra 4 lesson)","sec":"Skills","done":false},{"p":2,"t":"Reading Science Books (extra 4 page)","sec":"Reading","done":false},{"p":3,"t":"Write Diary (min 2 paragraph)","sec":"General","done":false},{"p":5,"t":"Attend School","sec":"Education","done":false},{"p":2,"t":"Attend Piano Lesson","sec":"Education","done":false},{"p":2,"t":"Attend Gymnast","sec":"Education","done":false},{"p":3,"t":"Attend Extra Lesson Ngaji","sec":"Education","done":false},{"p":2,"t":"Recite 5 Surah in front of Papa/Mama (can read or not)","sec":"Solat","done":false}]],"rewards":[{"c":5,"t":"15 Mins screentime","sec":"Screen Time"},{"c":5,"t":"15 Mins screentime (2nd)","sec":"Screen Time"},{"c":10,"t":"15 Mins screentime (3rd)","sec":"Screen Time"},{"c":10,"t":"15 Mins screentime (4th)","sec":"Screen Time"},{"c":50,"t":"Movie Time (max 2 jam)","sec":"Special"}],"bonusLog":[{"id":1780995459158,"pts":10,"date":"2026-06-07","task":"Clean bike","kidIdx":0,"addedAt":"2026-06-09T08:57:39.158Z"},{"id":1780995466410,"pts":10,"date":"2026-06-07","task":"Clean bike","kidIdx":1,"addedAt":"2026-06-09T08:57:46.410Z"}],"lastMonth":5,"punishLog":[],"monthWinner":-1,"redemptions":[{"id":1780616830581,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-04T23:47:10.581Z","rewardIdx":0,"resolvedAt":"2026-06-05T02:59:15.596Z"},{"id":1780616836597,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-04T23:47:16.597Z","rewardIdx":1,"resolvedAt":"2026-06-05T02:59:15.596Z"},{"id":1780616838426,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-04T23:47:18.426Z","rewardIdx":2,"resolvedAt":"2026-06-05T02:59:15.596Z"},{"id":1780616843325,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-04T23:47:23.325Z","rewardIdx":3,"resolvedAt":"2026-06-05T02:59:15.596Z"},{"id":1780630033134,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-05T03:27:13.134Z","rewardIdx":0,"resolvedAt":"2026-06-05T03:40:48.753Z"},{"id":1780632681469,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-05T04:11:21.469Z","rewardIdx":1,"resolvedAt":"2026-06-05T11:54:11.278Z"},{"id":1780701126841,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-05T23:12:06.841Z","rewardIdx":0,"resolvedAt":"2026-06-05T23:13:24.623Z"},{"id":1780701132558,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-05T23:12:12.558Z","rewardIdx":1,"resolvedAt":"2026-06-05T23:13:25.351Z"},{"id":1780701134956,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-05T23:12:14.956Z","rewardIdx":2,"resolvedAt":"2026-06-05T23:13:25.919Z"},{"id":1780701138707,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-05T23:12:18.707Z","rewardIdx":3,"resolvedAt":"2026-06-05T23:13:26.919Z"},{"id":1780734089527,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-06T08:21:29.527Z","rewardIdx":0,"resolvedAt":"2026-06-06T08:22:35.904Z"},{"id":1780734091178,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-06T08:21:31.178Z","rewardIdx":2,"resolvedAt":"2026-06-06T08:22:36.854Z"},{"id":1780734092595,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-06T08:21:32.595Z","rewardIdx":3,"resolvedAt":"2026-06-06T08:22:37.421Z"},{"id":1780734094928,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-06T08:21:34.928Z","rewardIdx":1,"resolvedAt":"2026-06-06T08:22:38.055Z"},{"id":1780757028579,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-06T14:43:48.579Z","rewardIdx":0,"resolvedAt":"2026-06-07T00:55:53.606Z"},{"id":1780757030312,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-06T14:43:50.312Z","rewardIdx":1,"resolvedAt":"2026-06-07T00:55:53.606Z"},{"id":1780757031843,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-06T14:43:51.843Z","rewardIdx":2,"resolvedAt":"2026-06-07T00:55:53.606Z"},{"id":1780757033361,"joint":false,"kidIdx":0,"status":"expired","createdAt":"2026-06-06T14:43:53.361Z","rewardIdx":3,"resolvedAt":"2026-06-07T00:55:53.606Z"},{"id":1780793800972,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-07T00:56:40.972Z","rewardIdx":0,"resolvedAt":"2026-06-07T03:07:11.122Z"},{"id":1780793804464,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-07T00:56:44.464Z","rewardIdx":1,"resolvedAt":"2026-06-07T03:07:11.672Z"},{"id":1780793806278,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-07T00:56:46.278Z","rewardIdx":2,"resolvedAt":"2026-06-07T03:07:12.223Z"},{"id":1780793808051,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-07T00:56:48.051Z","rewardIdx":3,"resolvedAt":"2026-06-07T03:07:12.756Z"},{"id":1780801524773,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-07T03:05:24.773Z","rewardIdx":0,"resolvedAt":"2026-06-07T03:07:13.373Z"},{"id":1780801528605,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-07T03:05:28.605Z","rewardIdx":1,"resolvedAt":"2026-06-07T03:07:13.923Z"},{"id":1780844574557,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-07T15:02:54.558Z","rewardIdx":2,"resolvedAt":"2026-06-07T15:24:16.977Z"},{"id":1780844576079,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-07T15:02:56.079Z","rewardIdx":3,"resolvedAt":"2026-06-07T15:24:17.993Z"},{"id":1780877451811,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-08T00:10:51.811Z","rewardIdx":0,"resolvedAt":"2026-06-08T07:23:15.959Z"},{"id":1780877453534,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-08T00:10:53.534Z","rewardIdx":1,"resolvedAt":"2026-06-08T07:23:16.492Z"},{"id":1780877455092,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-08T00:10:55.092Z","rewardIdx":2,"resolvedAt":"2026-06-08T07:23:16.892Z"},{"id":1780877456392,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-08T00:10:56.392Z","rewardIdx":3,"resolvedAt":"2026-06-08T07:23:17.176Z"},{"id":1780891759511,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-08T04:09:19.511Z","rewardIdx":0,"resolvedAt":"2026-06-08T07:23:17.626Z"},{"id":1780934137778,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-08T15:55:37.778Z","rewardIdx":1,"resolvedAt":"2026-06-08T16:15:25.081Z"},{"id":1780934139361,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-08T15:55:39.361Z","rewardIdx":2,"resolvedAt":"2026-06-08T16:15:25.697Z"},{"id":1780979102683,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-09T04:25:02.683Z","rewardIdx":0,"resolvedAt":"2026-06-09T04:25:30.767Z"},{"id":1780979567391,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-09T04:32:47.391Z","rewardIdx":1,"resolvedAt":"2026-06-09T04:32:58.739Z"},{"id":1781005100450,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-09T11:38:20.450Z","rewardIdx":2,"resolvedAt":"2026-06-09T11:38:56.107Z"},{"id":1781005102112,"joint":false,"kidIdx":1,"status":"approved","createdAt":"2026-06-09T11:38:22.112Z","rewardIdx":3,"resolvedAt":"2026-06-09T11:38:56.624Z"},{"id":1781005115117,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-09T11:38:35.117Z","rewardIdx":0,"resolvedAt":"2026-06-09T11:38:57.004Z"},{"id":1781005116449,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-09T11:38:36.449Z","rewardIdx":1,"resolvedAt":"2026-06-09T11:38:57.290Z"},{"id":1781005117583,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-09T11:38:37.583Z","rewardIdx":2,"resolvedAt":"2026-06-09T11:38:57.540Z"},{"id":1781005118750,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-09T11:38:38.750Z","rewardIdx":3,"resolvedAt":"2026-06-09T11:38:57.874Z"},{"id":1781057069481,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-10T02:04:29.481Z","rewardIdx":0,"resolvedAt":"2026-06-10T03:39:54.079Z"},{"id":1781057070638,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-10T02:04:30.638Z","rewardIdx":1,"resolvedAt":"2026-06-10T03:39:54.561Z"},{"id":1781057071719,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-10T02:04:31.719Z","rewardIdx":2,"resolvedAt":"2026-06-10T03:39:54.977Z"},{"id":1781057072643,"joint":false,"kidIdx":0,"status":"approved","createdAt":"2026-06-10T02:04:32.643Z","rewardIdx":3,"resolvedAt":"2026-06-10T03:39:55.513Z"}],"taskSections":["Solat","Education","Reading","Skills","Health","Free"],"rewardSections":["Screen Time","Food","Special"]};
+
+let S=null,kidI=0,viewKidI=0,histKidI=0,bonusKidI=0,punishKidI=0;
+let hTasks=null,hDate=null,saveTimer=null,opened=false;
+let selEmoji=null,selPhoto=null;
+
+function defS(){return JSON.parse(JSON.stringify(SEED));}
+function fix(d){
+  d.kids.forEach(k=>{
+    if(!k.history)k.history={};
+    if(!k.avatar)k.avatar='';
+    if(k.solatStreak===undefined)k.solatStreak=0;
+    if(k.solat7Awarded===undefined)k.solat7Awarded=0;
+    if(k.solat30Awarded===undefined)k.solat30Awarded=0;
+    if(k.monthWins===undefined)k.monthWins=0;
+    if(k.streakBonusAwarded===undefined)k.streakBonusAwarded=false;
+    if(!k.badges)k.badges=[];
+  });
+  if(!d.taskSections)d.taskSections=['Solat','Education','Reading','Skills','Health','General'];
+  if(!d.rewardSections)d.rewardSections=['Screen Time','Food','Special'];
+  if(!d.redemptions)d.redemptions=[];
+  if(!d.bonusLog)d.bonusLog=[];
+  if(!d.punishLog)d.punishLog=[];
+  return d;
+}
+
+// CLOUD
+async function dbSave(){
+  showSync();
+  try{
+    await fetch(SUPA+'/rest/v1/app_state?id=eq.starchart',{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({data:S,updated_at:new Date().toISOString()})});
+  }catch(e){toast('⚠️ Save failed');}
+  hideSync();
+}
+function save(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>dbSave(),1500);}
+function showSync(){document.getElementById('sync-bar').classList.add('on');}
+function hideSync(){setTimeout(()=>document.getElementById('sync-bar').classList.remove('on'),1000);}
+
+// INIT
+function openApp(ok){
+  if(opened)return;opened=true;
+  document.getElementById('loading').style.display='none';
+  document.getElementById('cloud-status').textContent=ok?'☁️ Cloud connected':'⚠️ Offline mode';
+  updateLoginUI();go('s-login');checkMonthEnd();
+}
+async function init(){
+  const fb=setTimeout(()=>openApp(false),5000);
+  try{
+    const ctrl=new AbortController();
+    const t=setTimeout(()=>ctrl.abort(),4500);
+    const r=await fetch(SUPA+'/rest/v1/app_state?id=eq.starchart&select=data',{headers:{'apikey':KEY,'Authorization':'Bearer '+KEY},signal:ctrl.signal});
+    clearTimeout(t);
+    const rows=await r.json();
+    if(rows&&rows.length&&rows[0].data&&Object.keys(rows[0].data).length>0){
+      S=fix(rows[0].data);
+    }else{S=fix(defS());}
+  }catch(e){S=fix(defS());}
+  clearTimeout(fb);openApp(true);
+}
+
+// NAV
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function toast(msg,dur=2500){const t=document.getElementById('toast-el');t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',dur);}
+function showOverlay(html){document.getElementById('main-overlay').innerHTML=html;document.getElementById('main-overlay').style.display='flex';}
+function closeOverlay(){document.getElementById('main-overlay').style.display='none';}
+function showSheet(html){document.getElementById('sheet-body').innerHTML=html;document.getElementById('sheet-bg').style.display='flex';}
+function closeSheet(){document.getElementById('sheet-bg').style.display='none';}
+
+// AUTH
+function checkPass(){
+  const v=document.getElementById('p-pass').value;
+  document.getElementById('p-err').style.display='none';
+  if(v===S.pass){document.getElementById('p-pass').value='';openParent();}
+  else document.getElementById('p-err').style.display='block';
+}
+function loginKid(i){
+  if(!S||!S.kids)return;
+  kidI=i;checkDayReset();renderKid();go('s-kid');
+  setTimeout(()=>showNeglected(),600);
+}
+function updateLoginUI(){
+  if(!S)return;
+  [0,1].forEach(i=>{
+    const av=S.kids[i].avatar||(i===0?'🌙':'🌸');
+    const el=document.getElementById('av-login-'+i);
+    if(av.startsWith('data:')){el.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+    else{el.textContent=av;}
+    document.getElementById('name-btn-'+i).textContent=S.kids[i].name;
+  });
+}
+
+// DATE
+function todayStr(){return new Date().toDateString();}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+
+// DAY RESET
+function checkDayReset(){
+  const today=todayStr(),k=S.kids[kidI];
+  if(k.lastDate===today)return;
+  if(k.lastDate){
+    const tasks=S.tasks[kidI];
+    const snap=tasks.map(t=>({t:t.t,p:t.p,done:t.done,sec:t.sec||'General'}));
+    const raw=tasks.filter(t=>t.done).reduce((a,t)=>a+t.p,0);
+    const total=raw+(k.solatBonusToday?10:0);
+    const sd=solatDone(tasks);
+    k.history[k.lastDate]={tasks:snap,pts:total,solatBonus:k.solatBonusToday,solatComplete:sd};
+    if(total>=23)k.streak++;else k.streak=0;
+    if(sd)k.solatStreak=(k.solatStreak||0)+1;else k.solatStreak=0;
+    checkStreakBonus();checkSolatBonus();
+  }
+  S.tasks[kidI]=S.tasks[kidI].map(t=>({...t,done:false}));
+  k.solatBonusToday=false;k.streakBonusAwarded=false;k.lastDate=today;
+  save();
+}
+
+// MONTH END
+function checkMonthEnd(){
+  const cm=new Date().getMonth();
+  if(S.lastMonth===cm)return;
+  S.lastMonth=cm;
+  const p0=S.kids[0].monthPts||0,p1=S.kids[1].monthPts||0;
+  if(p0!==p1){const w=p0>p1?0:1;S.kids[w].pts+=20;S.kids[w].monthPts=(S.kids[w].monthPts||0)+20;S.kids[w].monthWins=(S.kids[w].monthWins||0)+1;S.monthWinner=w;}
+  else S.monthWinner=-1;
+  S.kids[0].monthPts=0;S.kids[1].monthPts=0;
+  save();
+  if(S.monthWinner>=0)setTimeout(()=>showWinner(S.monthWinner),800);
+}
+
+// STREAK BONUSES
+function checkStreakBonus(){
+  const k=S.kids[kidI],hist=k.history,keys=Object.keys(hist).sort((a,b)=>new Date(b)-new Date(a)).slice(0,7);
+  if(keys.length>=7&&keys.every(dk=>hist[dk].pts>=23)&&!k.streakBonusAwarded){
+    k.pts+=20;k.monthPts=(k.monthPts||0)+20;k.streakBonusAwarded=true;
+    if(!k.badges.includes('sp7'))k.badges.push('sp7');
+    soundPB();setTimeout(()=>showBonus('7-DAY POWER BONUS!','🚀 +20 pts!','#7F77DD'),500);save();
+  }
+}
+function checkSolatBonus(){
+  const k=S.kids[kidI],ss=k.solatStreak||0;
+  const s7=Math.floor(ss/7);
+  if(s7>(k.solat7Awarded||0)){const n=s7-(k.solat7Awarded||0);k.pts+=n*20;k.monthPts=(k.monthPts||0)+n*20;k.solat7Awarded=s7;if(!k.badges.includes('sol7'))k.badges.push('sol7');soundPB();setTimeout(()=>showBonus('SOLAT 7-DAY! 🤲','🌙 +20 pts!','#1D9E75'),500);save();}
+  const s30=Math.floor(ss/30);
+  if(s30>(k.solat30Awarded||0)){const n=s30-(k.solat30Awarded||0);k.pts+=n*30;k.monthPts=(k.monthPts||0)+n*30;k.solat30Awarded=s30;if(!k.badges.includes('sol30'))k.badges.push('sol30');soundWinner();setTimeout(()=>showBonus('SOLAT 30-DAY! 🏆','💎 +30 pts!','#EF9F27'),600);save();}
+}
+function checkBadges(){
+  const k=S.kids[kidI];
+  if(S.tasks[kidI].some(t=>t.done)&&!k.badges.includes('f'))k.badges.push('f');
+  if(k.streak>=3&&!k.badges.includes('s3'))k.badges.push('s3');
+  if(k.streak>=7&&!k.badges.includes('s7'))k.badges.push('s7');
+  if(k.streak>=7&&!k.badges.includes('w1'))k.badges.push('w1');
+  if(k.pts>=50&&!k.badges.includes('p50'))k.badges.push('p50');
+  if((k.solatStreak||0)>=7&&!k.badges.includes('sol7'))k.badges.push('sol7');
+  if((k.solatStreak||0)>=30&&!k.badges.includes('sol30'))k.badges.push('sol30');
+}
+
+// SOLAT HELPERS
+function solatDone(tasks){return SOLAT.every(n=>tasks.some(t=>t.t===n&&t.done));}
+function solatLeft(tasks){return SOLAT.filter(n=>!tasks.some(t=>t.t===n&&t.done)).length;}
+function solatDoneSnap(tasks){if(!tasks)return false;return SOLAT.every(n=>tasks.some(t=>t.t===n&&t.done));}
+
+// PILL
+function pill(p){return '<span class="pill '+(p>=4?'p4':p>=2?'p2':p>=1?'p1':'p0')+'">'+(p===0?'free':p+'pt')+'</span>';}
+
+// TOTAL EARNED CALC
+function totalEarned(ki){
+  const k=S.kids[ki],hist=k.history||{};
+  const hp=Object.values(hist).reduce((a,d)=>a+(d.pts||0),0);
+  const bp=(S.bonusLog||[]).filter(b=>b.kidIdx===ki&&b.task!=='Fixing points').reduce((a,b)=>a+b.pts,0);
+  const today=todayStr();
+  const tp=k.lastDate===today?S.tasks[ki].filter(t=>t.done).reduce((a,t)=>a+t.p,0)+(k.solatBonusToday?10:0):0;
+  return hp+bp+tp;
+}
+
+// TOGGLE TASK
+function toggle(i){
+  if(!S||!S.kids[kidI])return;
+  const t=S.tasks[kidI][i],k=S.kids[kidI];
+  if(!t.done){
+    t.done=true;k.pts+=t.p;k.monthPts=(k.monthPts||0)+t.p;soundTick();checkBadges();
+    const sd=solatDone(S.tasks[kidI]);
+    if(sd&&!k.solatBonusToday){k.solatBonusToday=true;k.pts+=10;k.monthPts=(k.monthPts||0)+10;if(!k.badges.includes('solat'))k.badges.push('solat');soundSolat();setTimeout(()=>showBonus('SOLAT COMPLETE! 🤲','+10 pts! MashaAllah!','#1D9E75'),400);}
+    if(S.tasks[kidI].every(x=>x.done)){k.streak++;checkBadges();bigConfetti();soundAllDone();}
+  }else{
+    if(t.p>0)k.pts=Math.max(0,k.pts-t.p); // uncheck reduces balance only, not monthPts
+    t.done=false;
+  }
+  save();renderKid();
+}
+
+// RENDER KID
+function setAvEl(el,av){if(av.startsWith('data:')){el.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}else{el.innerHTML=av;}}
+function renderKid(){
+  if(!S||!S.kids[kidI])return;
+  const k=S.kids[kidI],tasks=S.tasks[kidI];
+  setAvEl(document.getElementById('kid-av'),k.avatar||(kidI===0?'🌙':'🌸'));
+  document.getElementById('kid-name').textContent=k.name;
+  document.getElementById('kid-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('kid-quote').textContent=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('kid-streak').textContent=k.streak;
+  document.getElementById('kid-solat-streak').textContent=k.solatStreak||0;
+  document.getElementById('kid-pts').textContent=k.pts;
+  document.getElementById('kid-mpts').textContent=k.monthPts||0;
+  document.getElementById('kid-tpts').textContent=totalEarned(kidI);
+  document.getElementById('kid-mlabel').textContent=new Date().toLocaleString('default',{month:'short'})+' earned';
+  const done=tasks.filter(t=>t.done).length;
+  document.getElementById('kid-prog').textContent=done+'/'+tasks.length;
+  // banners
+  let b='';
+  if(k.solatBonusToday)b+='<div style="background:#EEEDFE;border:1px solid #AFA9EC;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:700;color:#26215C;text-align:center">🤲 Solat Complete! +10 bonus pts!</div>';
+  if(k.streakBonusAwarded)b+='<div style="background:#E1F5EE;border:1px solid #5DCAA5;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:700;color:#04342C;text-align:center">🚀 7-day power bonus! +20 pts!</div>';
+  if(!k.solatBonusToday){const sl=solatLeft(tasks);if(sl>0)b+='<div style="background:#F8F7F4;border:0.5px solid #D3D1C7;border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#888780;text-align:center">'+sl+' solat left for +10 bonus 🤲</div>';}
+  const sl=getScreenlock(kidI);
+  if(sl)b+='<div style="background:#FAECE7;border:1px solid #F09595;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:700;color:#791F1F;text-align:center">🔒 Screentime locked: '+sl.d+' day'+(sl.d!==1?'s':'')+' remaining<br><span style="font-size:11px;font-weight:400">'+sl.reason+'</span></div>';
+  document.getElementById('kid-banners').innerHTML=b;
+  // tasks
+  if(done===tasks.length&&tasks.length>0){
+    document.getElementById('kid-tasks').innerHTML='';
+    document.getElementById('kid-alldone').style.display='block';
+  }else{
+    document.getElementById('kid-alldone').style.display='none';
+    const secs=[...new Set([...(S.taskSections||[]),'General'])];
+    const grouped={};
+    tasks.forEach((t,i)=>{const s=secs.includes(t.sec)?t.sec:'General';if(!grouped[s])grouped[s]=[];grouped[s].push({t,i});});
+    let html='';
+    secs.forEach(s=>{
+      if(!grouped[s]||!grouped[s].length)return;
+      html+='<div class="sec-hdr">'+s+'</div>';
+      grouped[s].forEach(function(item){
+        const t=item.t,i=item.i;
+        html+='<div class="row">';
+        html+='<div class="chk'+(t.done?' on':'')+'" onclick="toggle('+i+')">'+(t.done?'✓':'')+'</div>';
+        html+='<div style="flex:1;font-size:13px;font-weight:700;'+(t.done?'text-decoration:line-through;opacity:0.5':'')+'">'+(t.t||'')+'</div>';
+        html+=pill(t.p);
+        html+='</div>';
+      });
+    });
+    document.getElementById('kid-tasks').innerHTML=html;
+  }
+  // badges
+  document.getElementById('kid-badges').innerHTML=BDEFS.map(function(bd){return '<div class="bdg'+(k.badges.includes(bd.id)?' on':'')+'"><div class="bdg-icon">'+(k.badges.includes(bd.id)?bd.e:'🔒')+'</div><div class="bdg-name">'+bd.n+'</div></div>';}).join('');
+  renderKidRewards();renderKidGranted();
+}
+
+// KID REWARDS
+function renderKidRewards(){
+  const k=S.kids[kidI];midnightCutoff();
+  const today=todayISO();
+  const rsecs=[...new Set([...(S.rewardSections||[]),'General'])];
+  const grouped={};
+  S.rewards.forEach(function(r,ri){const s=rsecs.includes(r.sec)?r.sec:'General';if(!grouped[s])grouped[s]=[];grouped[s].push({r:r,ri:ri});});
+  let html='';
+  rsecs.forEach(function(s){
+    if(!grouped[s]||!grouped[s].length)return;
+    html+='<div class="sec-hdr" style="margin-top:6px">'+s+'</div>';
+    grouped[s].forEach(function(item){
+      const r=item.r,ri=item.ri;
+      const other=S.kids[kidI===0?1:0],half=Math.ceil(r.c/2);
+      const canSolo=k.pts>=r.c,canJoint=k.pts>=half&&other.pts>=half;
+      const isScr=((r.sec||'').toLowerCase().includes('screen')||(r.t||'').toLowerCase().includes('screen'));
+      const sl=isScr?getScreenlock(kidI):null;
+      const todayReq=S.redemptions.find(function(p){return p.rewardIdx===ri&&p.createdAt&&p.createdAt.slice(0,10)===today&&(p.kidIdx===kidI||(p.joint&&p.jointKidIdx===kidI));});
+      const jointIn=S.redemptions.find(function(p){return p.rewardIdx===ri&&p.status==='pending'&&p.joint&&p.jointKidIdx===kidI&&p.jointStatus==='pending'&&p.createdAt&&p.createdAt.slice(0,10)===today;});
+      html+='<div class="row"><div style="flex:1"><div style="font-size:13px;font-weight:700">'+r.t+'</div>';
+      if(sl){
+        html+='<div class="muted" style="font-size:11px">'+r.c+' pts · 🔒 '+sl.d+'d remaining</div></div><span class="pill pr">Locked</span></div>';
+      }else if(jointIn){
+        const ji=S.redemptions.indexOf(jointIn);
+        html+='<div class="muted" style="font-size:11px">'+S.kids[jointIn.kidIdx].name+' wants to split!</div></div><button onclick="showJointAccept('+ji+')" style="background:#FF6B6B;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;cursor:pointer">Respond</button></div>';
+      }else if(todayReq){
+        if(todayReq.status==='approved')html+='<div class="muted" style="font-size:11px">'+r.c+' pts</div></div><button onclick="showGrantedMsg(\''+r.t.replace(/'/g,"\\'")+'\')" style="background:#4ECDC4;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;cursor:pointer">🎉 Granted!</button></div>';
+        else if(todayReq.status==='rejected')html+='<div class="muted" style="font-size:11px">'+r.c+' pts</div></div><button onclick="showRejectedMsg(\''+r.t.replace(/'/g,"\\'")+'\')" style="background:#E24B4A;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;cursor:pointer">Not granted</button></div>';
+        else html+='<div class="muted" style="font-size:11px">'+r.c+' pts'+(todayReq.joint?' · Waiting for '+other.name:'')+'</div></div><span style="background:#FFF9E6;color:#633806;border:1px solid #EF9F27;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700">⏳ Pending</span></div>';
+      }else{
+        html+='<div class="muted" style="font-size:11px">'+r.c+' pts needed</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">';
+        html+='<button onclick="'+(canSolo?'openRedeem('+ri+',false)':'')+'" style="background:'+(canSolo?'#4ECDC4':'#D3D1C7')+';color:'+(canSolo?'#fff':'#888780')+';border:none;border-radius:8px;padding:4px 10px;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;cursor:'+(canSolo?'pointer':'default')+'">'+(canSolo?'Redeem':k.pts+'/'+r.c+' pts')+'</button>';
+        if(canJoint)html+='<button onclick="openRedeem('+ri+',true)" style="background:#7F77DD;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;cursor:pointer">Split 50/50</button>';
+        html+='</div></div>';
+      }
+    });
+  });
+  document.getElementById('kid-rewards').innerHTML=html;
+}
+function renderKidGranted(){
+  const ms=todayISO().slice(0,7);
+  const gr=S.redemptions.filter(function(r){return r.status==='approved'&&r.resolvedAt&&r.resolvedAt.slice(0,7)===ms&&(r.kidIdx===kidI||(r.joint&&r.jointKidIdx===kidI));});
+  const el=document.getElementById('kid-granted');
+  if(!gr.length){el.innerHTML='<p class="muted" style="font-size:12px;text-align:center;padding:8px">No rewards granted this month yet</p>';return;}
+  el.innerHTML=gr.map(function(req){const r=S.rewards[req.rewardIdx]||{t:'Unknown'};const d=new Date(req.resolvedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'});return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid #E8E6DF"><div style="font-size:13px;font-weight:700">'+r.t+(req.joint?' 🤝':'')+'</div><div class="muted" style="font-size:11px">'+d+'</div></div>';}).join('');
+}
+
+// REDEEM
+function midnightCutoff(){
+  const today=todayISO();let ch=false;
+  S.redemptions.forEach(function(r){if(r.status==='pending'&&r.createdAt&&r.createdAt.slice(0,10)<today){r.status='expired';r.resolvedAt=new Date().toISOString();ch=true;}});
+  if(ch)save();
+}
+function openRedeem(ri,joint){
+  const r=S.rewards[ri];if(!r)return;midnightCutoff();
+  const k=S.kids[kidI],other=S.kids[kidI===0?1:0],half=Math.ceil(r.c/2);
+  if(S.redemptions.find(function(p){return p.rewardIdx===ri&&p.status==='approved'&&p.resolvedAt&&p.resolvedAt.slice(0,10)===todayISO()&&(p.kidIdx===kidI||(p.joint&&p.jointKidIdx===kidI));})){toast('Already granted today!');return;}
+  showSheet('<div style="font-size:16px;font-weight:800;margin-bottom:4px">'+(joint?'Split Reward 50/50':'Redeem Reward')+'</div><div class="muted" style="font-size:12px;margin-bottom:14px">'+(joint?'Each pays '+half+' pts — needs '+other.name+' agreement + parent approval':'Needs parent approval')+'</div><div style="background:#F8F7F4;border-radius:12px;padding:14px;margin-bottom:14px;text-align:center"><div style="font-size:17px;font-weight:800;margin-bottom:4px">'+r.t+'</div><div style="font-size:22px;font-weight:800;color:#FF6B6B">'+(joint?half:r.c)+' pts'+(joint?' each':'')+'</div></div><button class="btn btn-red" onclick="submitRedeem('+ri+','+joint+')" style="margin-bottom:8px">'+(joint?'Request Split with '+other.name:'Request Redeem')+'</button><button class="btn" onclick="closeSheet()">Cancel</button>');
+}
+function submitRedeem(ri,joint){
+  const other=S.kids[kidI===0?1:0];midnightCutoff();
+  if(S.redemptions.find(function(p){return p.rewardIdx===ri&&p.status==='pending'&&p.createdAt&&p.createdAt.slice(0,10)===todayISO()&&(p.kidIdx===kidI||(p.joint&&p.jointKidIdx===kidI));})){toast('Already requested today!');closeSheet();return;}
+  const req={id:Date.now(),rewardIdx:ri,kidIdx:kidI,joint:joint,status:'pending',createdAt:new Date().toISOString()};
+  if(joint){req.jointKidIdx=kidI===0?1:0;req.jointStatus='pending';}
+  S.redemptions.push(req);save();closeSheet();
+  toast(joint?'Split request sent! Waiting for '+other.name+' ⏳':'Sent to parent! ⏳');
+  renderKid();updateBadge();
+}
+function showJointAccept(idx){
+  const req=S.redemptions[idx];if(!req)return;
+  const r=S.rewards[req.rewardIdx],half=Math.ceil(r.c/2),rq=S.kids[req.kidIdx];
+  showSheet('<div style="font-size:16px;font-weight:800;margin-bottom:14px">Joint Request</div><div style="background:#F8F7F4;border-radius:12px;padding:14px;margin-bottom:14px;text-align:center"><div class="muted" style="font-size:12px;margin-bottom:4px">'+rq.name+' wants to split:</div><div style="font-size:17px;font-weight:800;margin-bottom:4px">'+r.t+'</div><div style="font-size:22px;font-weight:800;color:#FF6B6B">'+half+' pts from you</div></div><button class="btn btn-red" onclick="respondJoint('+idx+',true)" style="margin-bottom:8px">✓ Accept</button><button class="btn btn-danger" onclick="respondJoint('+idx+',false)" style="margin-bottom:8px">✗ Decline</button><button class="btn" onclick="closeSheet()">Cancel</button>');
+}
+function respondJoint(idx,accept){
+  const req=S.redemptions[idx];
+  if(accept)req.jointStatus='accepted';
+  else{req.status='rejected';req.jointStatus='declined';req.resolvedAt=new Date().toISOString();}
+  save();closeSheet();toast(accept?'Accepted! Waiting for parent ⏳':'Declined.');renderKid();updateBadge();
+}
+function updateBadge(){
+  midnightCutoff();
+  const n=S.redemptions.filter(function(r){return r.status==='pending'&&(!r.joint||r.jointStatus==='accepted');}).length;
+  ['rdm-badge','rdm-badge2'].forEach(function(id){const b=document.getElementById(id);if(b){b.textContent=n;b.style.display=n>0?'inline-flex':'none';}});
+}
+function approveRedeem(idx){
+  const req=S.redemptions[idx],r=S.rewards[req.rewardIdx];if(!r)return;
+  const half=Math.ceil(r.c/2);
+  // deduct from balance only — monthPts tracks total earned, never deducted
+  if(req.joint){S.kids[req.kidIdx].pts=Math.max(0,S.kids[req.kidIdx].pts-half);S.kids[req.jointKidIdx].pts=Math.max(0,S.kids[req.jointKidIdx].pts-half);}
+  else S.kids[req.kidIdx].pts=Math.max(0,S.kids[req.kidIdx].pts-r.c);
+  req.status='approved';req.resolvedAt=new Date().toISOString();
+  save();renderRedeemPanel();toast('Approved ✓');
+}
+function rejectRedeem(idx){
+  S.redemptions[idx].status='rejected';S.redemptions[idx].resolvedAt=new Date().toISOString();
+  save();renderRedeemPanel();toast('Rejected.');
+}
+
+// OVERLAYS
+function showBonus(title,sub,color){
+  bigConfetti();
+  showOverlay('<div class="modal" style="border-color:'+color+'"><div style="font-size:48px;margin-bottom:8px">✨</div><div style="font-size:18px;font-weight:800;margin-bottom:6px">'+title+'</div><div class="muted" style="margin-bottom:18px">'+sub+'</div><button class="btn btn-red" onclick="closeOverlay()" style="margin-bottom:0">Awesome! 🎉</button></div>');
+}
+function showWinner(idx){
+  bigConfetti();bigConfetti();soundWinner();
+  const k=S.kids[idx],loser=S.kids[idx===0?1:0];
+  showOverlay('<div class="modal"><div style="font-size:56px;margin-bottom:8px">'+(idx===0?'🌙':'🌸')+'</div><div style="font-size:12px;font-weight:700;color:#854F0B;letter-spacing:1px;margin-bottom:4px">MONTHLY CHAMPION</div><div style="font-size:24px;font-weight:800;margin-bottom:6px">'+k.name+'</div><div style="font-size:32px;font-weight:800;color:#FF6B6B;margin-bottom:4px">'+(k.monthPts||k.pts)+' pts</div><div class="muted" style="margin-bottom:4px">vs '+loser.name+': '+(loser.monthPts||loser.pts)+' pts</div><div style="background:#FFF9E6;border:1px solid #EF9F27;border-radius:10px;padding:10px;margin:12px 0;font-weight:700;color:#412402;font-size:14px">🏆 +20 bonus points!</div><button class="btn btn-red" onclick="closeOverlay()" style="margin-bottom:0">YAY! 🎊</button></div>');
+}
+function testWinner(){const p0=S.kids[0].monthPts||0,p1=S.kids[1].monthPts||0;if(p0===p1){toast('Tied!');return;}showWinner(p0>p1?0:1);}
+function showGrantedMsg(name){showOverlay('<div class="modal" style="border-color:#4ECDC4"><div style="font-size:48px;margin-bottom:8px">🎉</div><div style="font-size:18px;font-weight:800;margin-bottom:6px">Reward Granted!</div><div class="muted" style="margin-bottom:18px">'+name+'</div><button class="btn btn-teal" onclick="closeOverlay()" style="margin-bottom:0">Yay! 🎊</button></div>');}
+function showRejectedMsg(name){showOverlay('<div class="modal" style="border-color:#E24B4A"><div style="font-size:48px;margin-bottom:8px">😢</div><div style="font-size:18px;font-weight:800;margin-bottom:6px">Not Granted</div><div class="muted" style="margin-bottom:18px">'+name+'</div><button class="btn btn-danger" onclick="closeOverlay()" style="margin-bottom:0">OK</button></div>');}
+
+// NEGLECTED
+function showNeglected(){
+  const k=S.kids[kidI],hist=k.history||{},today=new Date();
+  const last7=[];for(let d=1;d<=7;d++){const dt=new Date(today);dt.setDate(today.getDate()-d);last7.push(dt.toDateString());}
+  const rec=last7.filter(function(dk){return hist[dk];});
+  if(!rec.length)return;
+  const neg=S.tasks[kidI].filter(function(t){
+    if(t.p===0)return false;
+    return!rec.some(function(dk){const dt=hist[dk].tasks||[];return dt.some(function(ht){return ht.t===t.t&&ht.done;});});
+  });
+  if(!neg.length)return;
+  let list='';
+  neg.forEach(function(t){list+='<div class="row"><div style="font-size:14px">⚠️</div><div style="flex:1;font-size:13px;font-weight:700">'+t.t+'</div>'+pill(t.p)+'</div>';});
+  showOverlay('<div class="modal" style="border-color:#EF9F27;max-width:340px"><div style="font-size:36px;margin-bottom:8px">😴</div><div style="font-size:17px;font-weight:800;margin-bottom:4px">Not done in 7+ days!</div><div class="muted" style="font-size:12px;margin-bottom:12px">Time to get back on track!</div><div style="text-align:left;margin-bottom:14px;max-height:200px;overflow-y:auto">'+list+'</div><button class="btn btn-amber" onclick="closeOverlay()" style="margin-bottom:0">OK, I\'ll do it! 💪</button></div>');
+}
+
+// AVATAR
+function openAvatarPicker(){
+  selEmoji=null;selPhoto=null;
+  const cur=S.kids[kidI].avatar||'';
+  let eg='';
+  AVEMOJIS.forEach(function(e){eg+='<div class="emo'+(cur===e?' on':'')+'" onclick="selEmoji=\''+e+'\';selPhoto=null;document.querySelectorAll(\'.emo\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+e+'</div>';});
+  showSheet('<div style="font-size:16px;font-weight:800;margin-bottom:4px">Change Avatar</div><div class="muted" style="font-size:12px;margin-bottom:12px">Pick emoji or upload photo</div><div class="emo-grid">'+eg+'</div><label style="display:block;width:100%;padding:12px;border-radius:12px;border:1.5px dashed #D3D1C7;text-align:center;font-weight:700;color:#888780;cursor:pointer;margin-bottom:12px">📷 Upload photo<input type="file" accept="image/*" style="display:none" onchange="var r=new FileReader();r.onload=function(e){selPhoto=e.target.result;selEmoji=null;document.querySelectorAll(\'.emo\').forEach(function(x){x.classList.remove(\'on\')})};r.readAsDataURL(this.files[0])"></label><button class="btn btn-red" onclick="saveAvatar()" style="margin-bottom:8px">Save</button><button class="btn" onclick="closeSheet()">Cancel</button>');
+}
+function saveAvatar(){
+  if(!selEmoji&&!selPhoto){toast('Pick emoji or photo first');return;}
+  S.kids[kidI].avatar=selEmoji||selPhoto;
+  save();closeSheet();updateLoginUI();renderKid();toast('Avatar updated ☁️');
+}
+
+// PARENT
+function openParent(){
+  pTab('tasks',document.querySelector('.ptab'));
+  document.getElementById('s-n0').value=S.kids[0].name;
+  document.getElementById('s-n1').value=S.kids[1].name;
+  updatePNames();go('s-parent');
+  setTimeout(function(){autoBackup();},1000);
+}
+const PANELS=['tasks','history','battle','awards','rewards','reports','settings'];
+function pTab(name,btn){
+  PANELS.forEach(function(p){document.getElementById('p-'+p).style.display='none';});
+  document.getElementById('p-'+name).style.display='block';
+  document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  if(name==='tasks'){renderTasks();fillSecDrops();}
+  if(name==='history')initHist();
+  if(name==='battle')renderBattle();
+  if(name==='awards'){renderBonusList();renderPunishList();var d=new Date().toISOString().slice(0,10);['b-date','p-date'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=d;});}
+  if(name==='rewards'){renderAdminRewards();fillSecDrops();}
+  if(name==='reports')renderReports();
+  if(name==='settings'){document.getElementById('s-n0').value=S.kids[0].name;document.getElementById('s-n1').value=S.kids[1].name;}
+  updateBadge();
+}
+function taskSub(id,btn){
+  ['task-list','sec-list'].forEach(function(c){document.getElementById(c).style.display='none';});
+  document.getElementById(id).style.display='block';
+  document.querySelectorAll('#p-tasks .stab-row .stab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  if(id==='task-list')renderTasks();
+  if(id==='sec-list'){renderSecList('task');renderSecList('reward');}
+}
+function secTypeSub(id,btn){
+  ['tsec','rsec'].forEach(function(c){document.getElementById(c).style.display='none';});
+  document.getElementById(id).style.display='block';
+  btn.closest('.stab-row').querySelectorAll('.stab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+}
+function awardSub(id,btn){
+  ['bonus-panel','punish-panel'].forEach(function(c){document.getElementById(c).style.display='none';});
+  document.getElementById(id).style.display='block';
+  btn.closest('.stab-row').querySelectorAll('.stab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+}
+function rewSub(id,btn){
+  ['rew-list','rew-redeem'].forEach(function(c){document.getElementById(c).style.display='none';});
+  document.getElementById(id).style.display='block';
+  btn.closest('.stab-row').querySelectorAll('.stab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  if(id==='rew-redeem')renderRedeemPanel();
+  if(id==='rew-list')renderAdminRewards();
+}
+function updatePNames(){
+  [0,1].forEach(function(i){
+    ['vtk'+i+'n','hk'+i+'n','bk'+i+'n','pk'+i+'n'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=S.kids[i].name;});
+  });
+}
+function setKid(type,i,btn){
+  if(type==='bonus')bonusKidI=i;else punishKidI=i;
+  btn.closest('.stab-row').querySelectorAll('.stab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+}
+function viewTasks(i,btn){
+  viewKidI=i;
+  document.getElementById('vtk0').classList.toggle('on',i===0);
+  document.getElementById('vtk1').classList.toggle('on',i===1);
+  renderTasks();
+}
+
+// ADMIN TASKS
+function fillSecDrops(){
+  const tsecs=[...(S.taskSections||[]),'General'];
+  const rsecs=[...(S.rewardSections||[]),'General'];
+  var ts=document.getElementById('nt-sec');var rs=document.getElementById('nr-sec');
+  if(ts)ts.innerHTML=tsecs.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+  if(rs)rs.innerHTML=rsecs.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+}
+function renderTasks(){
+  fillSecDrops();
+  if(S.kids[0])document.getElementById('vtk0n').textContent=S.kids[0].name;
+  if(S.kids[1])document.getElementById('vtk1n').textContent=S.kids[1].name;
+  const el=document.getElementById('admin-tasks');if(!el)return;
+  const secs=[...new Set([...(S.taskSections||[]),'General'])];
+  const tasks=S.tasks[viewKidI];
+  if(!tasks||!tasks.length){el.innerHTML='<p class="muted" style="text-align:center;padding:10px">No tasks</p>';return;}
+  const grouped={};
+  tasks.forEach(function(t,i){const s=secs.includes(t.sec)?t.sec:'General';if(!grouped[s])grouped[s]=[];grouped[s].push({t:t,i:i});});
+  let html='';
+  secs.forEach(function(s){
+    if(!grouped[s]||!grouped[s].length)return;
+    html+='<div class="sec-hdr">'+s+'</div>';
+    grouped[s].forEach(function(item){
+      const t=item.t,i=item.i;
+      const tn=t.t.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const secOpts=secs.map(function(sv){return '<option value="'+sv+'"'+(sv===(t.sec||'General')?' selected':'')+'>'+sv+'</option>';}).join('');
+      html+='<div class="row">';
+      html+='<div style="color:#D3D1C7;cursor:grab;flex-shrink:0">☰</div>';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div id="tv'+i+'"><div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.t+'</div>';
+      html+='<div style="display:flex;gap:6px;margin-top:2px;align-items:center">'+pill(t.p)+'<button onclick="openEditTask('+i+')" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;color:#4ECDC4;padding:0">✏️</button></div></div>';
+      html+='<div id="te'+i+'" style="display:none;padding:8px;background:#F8F7F4;border-radius:10px;margin-top:4px">';
+      html+='<input type="text" id="en'+i+'" value="'+tn+'" style="margin-bottom:6px">';
+      html+='<input type="number" id="ep'+i+'" value="'+t.p+'" min="0" style="margin-bottom:6px">';
+      html+='<select id="es'+i+'" style="margin-bottom:8px">'+secOpts+'</select>';
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+      html+='<button onclick="saveEditTask('+i+')" style="background:#4ECDC4;color:#fff;border:none;border-radius:8px;padding:7px;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;cursor:pointer">Save</button>';
+      html+='<button onclick="closeEditTask('+i+')" style="background:#D3D1C7;color:#2C2C2A;border:none;border-radius:8px;padding:7px;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;cursor:pointer">Cancel</button>';
+      html+='</div></div></div>';
+      html+='<button onclick="rmTask('+i+')" style="background:none;border:none;cursor:pointer;font-size:18px;color:#E24B4A;flex-shrink:0">×</button>';
+      html+='</div>';
+    });
+  });
+  el.innerHTML=html;
+}
+function openEditTask(i){document.getElementById('tv'+i).style.display='none';document.getElementById('te'+i).style.display='block';}
+function closeEditTask(i){document.getElementById('tv'+i).style.display='';document.getElementById('te'+i).style.display='none';}
+function saveEditTask(i){
+  const n=document.getElementById('en'+i).value.trim();
+  const p=parseInt(document.getElementById('ep'+i).value);
+  const s=document.getElementById('es'+i).value;
+  if(!n){toast('Name required');return;}if(isNaN(p)||p<0){toast('Invalid points');return;}
+  S.tasks[viewKidI][i].t=n;S.tasks[viewKidI][i].p=p;S.tasks[viewKidI][i].sec=s;
+  save();renderTasks();toast('Saved ☁️');
+}
+function addTask(){
+  const n=document.getElementById('nt-name').value.trim();
+  const p=parseInt(document.getElementById('nt-pts').value);
+  const s=document.getElementById('nt-sec').value||'General';
+  const k=parseInt(document.getElementById('nt-kid').value);
+  if(!n)return;if(isNaN(p)||p<0){toast('Invalid points');return;}
+  if(k===2){S.tasks[0].push({t:n,p:p,done:false,sec:s});S.tasks[1].push({t:n,p:p,done:false,sec:s});}
+  else S.tasks[k].push({t:n,p:p,done:false,sec:s});
+  document.getElementById('nt-name').value='';document.getElementById('nt-pts').value='';
+  save();renderTasks();toast(k===2?'Added to both ☁️':'Added ☁️');
+}
+function rmTask(i){S.tasks[viewKidI].splice(i,1);save();renderTasks();}
+
+// SECTIONS
+function renderSecList(type){
+  const secs=type==='task'?S.taskSections||[]:S.rewardSections||[];
+  const elId=type==='task'?'tsec-list':'rsec-list';
+  const el=document.getElementById(elId);if(!el)return;
+  if(!secs.length){el.innerHTML='<p class="muted" style="text-align:center;padding:10px">No sections</p>';return;}
+  let html='';
+  secs.forEach(function(s,i){
+    const cnt=type==='task'?[0,1].reduce(function(a,ki){return a+S.tasks[ki].filter(function(t){return(t.sec||'General')===s;}).length;},0):S.rewards.filter(function(r){return(r.sec||'General')===s;}).length;
+    html+='<div class="row">';
+    html+='<div style="flex:1">';
+    html+='<div id="sv'+type+i+'"><div style="font-size:13px;font-weight:700">'+s+'</div>';
+    html+='<div style="display:flex;gap:6px;align-items:center;margin-top:2px"><span class="muted" style="font-size:11px">'+cnt+' item'+(cnt!==1?'s':'')+'</span><button onclick="openEditSec(\''+type+'\','+i+')" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;color:#4ECDC4;padding:0">✏️</button></div></div>';
+    html+='<div id="se'+type+i+'" style="display:none;margin-top:6px">';
+    html+='<input type="text" id="si'+type+i+'" value="'+s+'" style="margin-bottom:6px">';
+    html+='<div style="display:flex;gap:6px"><button onclick="saveSec(\''+type+'\','+i+')" style="background:#4ECDC4;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;cursor:pointer">Save</button><button onclick="closeSec(\''+type+'\','+i+')" style="background:#D3D1C7;color:#2C2C2A;border:none;border-radius:6px;padding:4px 10px;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;cursor:pointer">Cancel</button></div></div>';
+    html+='</div>';
+    html+='<button onclick="rmSec(\''+type+'\','+i+')" style="background:none;border:none;cursor:pointer;font-size:16px;color:#E24B4A">🗑️</button>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+function openEditSec(type,i){document.getElementById('sv'+type+i).style.display='none';document.getElementById('se'+type+i).style.display='block';}
+function closeSec(type,i){document.getElementById('sv'+type+i).style.display='';document.getElementById('se'+type+i).style.display='none';}
+function saveSec(type,i){
+  const v=document.getElementById('si'+type+i).value.trim();if(!v)return;
+  const old=type==='task'?S.taskSections[i]:S.rewardSections[i];
+  if(type==='task'){S.taskSections[i]=v;[0,1].forEach(function(ki){S.tasks[ki].forEach(function(t){if(t.sec===old)t.sec=v;});});}
+  else{S.rewardSections[i]=v;S.rewards.forEach(function(r){if(r.sec===old)r.sec=v;});}
+  save();renderSecList(type);fillSecDrops();toast('Updated ☁️');
+}
+function rmSec(type,i){
+  if(!confirm('Delete section? Items move to General.'))return;
+  const old=type==='task'?S.taskSections[i]:S.rewardSections[i];
+  if(type==='task'){S.taskSections.splice(i,1);[0,1].forEach(function(ki){S.tasks[ki].forEach(function(t){if(t.sec===old)t.sec='General';});});}
+  else{S.rewardSections.splice(i,1);S.rewards.forEach(function(r){if(r.sec===old)r.sec='General';});}
+  save();renderSecList(type);fillSecDrops();
+}
+function addSec(type){
+  const id=type==='task'?'new-tsec':'new-rsec';
+  const v=document.getElementById(id).value.trim();if(!v)return;
+  if(type==='task'){if(!S.taskSections.includes(v))S.taskSections.push(v);}
+  else{if(!S.rewardSections.includes(v))S.rewardSections.push(v);}
+  document.getElementById(id).value='';save();renderSecList(type);fillSecDrops();toast('Added ☁️');
+}
+
+// HISTORY
+let hKidI=0;
+function initHist(){
+  hKidI=0;
+  document.getElementById('hk0').classList.add('on');
+  document.getElementById('hk1').classList.remove('on');
+  document.getElementById('hist-editor').style.display='none';
+  document.getElementById('hist-date').value='';
+  document.getElementById('hist-info').textContent='';
+}
+function histKid(i,btn){
+  hKidI=i;
+  document.getElementById('hk0').classList.toggle('on',i===0);
+  document.getElementById('hk1').classList.toggle('on',i===1);
+  document.getElementById('hist-editor').style.display='none';
+  document.getElementById('hist-date').value='';
+}
+function loadHist(){
+  const dp=document.getElementById('hist-date').value;if(!dp)return;
+  const d=new Date(dp),dk=d.toDateString(),k=S.kids[hKidI];
+  document.getElementById('hist-editor').style.display='none';
+  document.getElementById('hist-diff').style.display='none';
+  const isToday=dk===todayStr();
+  let tasks;
+  if(isToday)tasks=S.tasks[hKidI].map(function(t){return {t:t.t,p:t.p,done:t.done,sec:t.sec||'General'};});
+  else if(k.history[dk])tasks=JSON.parse(JSON.stringify(k.history[dk].tasks));
+  else tasks=S.tasks[hKidI].map(function(t){return {t:t.t,p:t.p,done:false,sec:t.sec||'General'};});
+  hTasks=JSON.parse(JSON.stringify(tasks));hDate=dk;
+  const isBlank=!isToday&&!k.history[dk];
+  document.getElementById('hist-info').textContent=isToday?'Editing today':isBlank?'No record — showing blank checklist':'Editing past day';
+  document.getElementById('hist-title').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  renderHistTasks();renderHistBonuses();renderHistPunishments();
+  const sel=document.getElementById('hist-rew-sel');
+  sel.innerHTML='<option value="">Select reward...</option>'+S.rewards.map(function(r,i){return '<option value="'+i+'">'+r.t+' ('+r.c+' pts)</option>';}).join('');
+  document.getElementById('hist-editor').style.display='block';
+}
+function renderHistTasks(){
+  const pts=calcHistPts(hTasks);
+  document.getElementById('hist-pill').textContent=pts+' pts';
+  document.getElementById('hist-pill').className='pill '+(pts>=23?'p2':'p0');
+  let html='';
+  hTasks.forEach(function(t,i){
+    html+='<div class="row"><div class="chk'+(t.done?' on':'')+'" onclick="hTasks['+i+'].done=!hTasks['+i+'].done;renderHistTasks()">'+(t.done?'✓':'')+'</div><div style="flex:1;font-size:13px;font-weight:700;'+(t.done?'text-decoration:line-through;opacity:0.5':'')+'">'+(t.t||'')+'</div>'+pill(t.p)+'</div>';
+  });
+  document.getElementById('hist-tasks').innerHTML=html;
+}
+function calcHistPts(tasks){return tasks.filter(function(t){return t.done;}).reduce(function(a,t){return a+t.p;},0)+(solatDoneSnap(tasks)?10:0);}
+function saveHist(){
+  const k=S.kids[hKidI],isToday=hDate===todayStr();
+  const newPts=calcHistPts(hTasks),sd=solatDoneSnap(hTasks);
+  let oldPts=0;
+  if(isToday){
+    oldPts=S.tasks[hKidI].filter(function(t){return t.done;}).reduce(function(a,t){return a+t.p;},0)+(k.solatBonusToday?10:0);
+    S.tasks[hKidI]=S.tasks[hKidI].map(function(t,i){return Object.assign({},t,{done:hTasks[i]?hTasks[i].done:t.done});});
+    k.solatBonusToday=sd;
+  }else{
+    oldPts=(k.history[hDate]&&k.history[hDate].pts)||0;
+    k.history[hDate]={tasks:hTasks,pts:newPts,solatBonus:sd,solatComplete:sd};
+  }
+  if(sd&&!k.badges.includes('solat'))k.badges.push('solat');
+  const diff=newPts-oldPts;
+  k.pts=Math.max(0,k.pts+diff);
+  k.monthPts=Math.max(0,(k.monthPts||0)+diff);
+  recalcStreaks();save();
+  document.getElementById('hist-diff').style.display='block';
+  document.getElementById('hist-diff-body').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center"><div style="background:#F8F7F4;border-radius:10px;padding:10px"><div class="muted" style="font-size:11px">Before</div><div style="font-size:18px;font-weight:800">'+oldPts+'</div></div><div style="background:#F8F7F4;border-radius:10px;padding:10px"><div class="muted" style="font-size:11px">After</div><div style="font-size:18px;font-weight:800">'+newPts+'</div></div><div style="background:'+(diff>0?'#E1F5EE':diff<0?'#FAECE7':'#F8F7F4')+';border-radius:10px;padding:10px"><div class="muted" style="font-size:11px">Change</div><div style="font-size:18px;font-weight:800;color:'+(diff>0?'#0F6E56':diff<0?'#993C1D':'#2C2C2A')+'">'+(diff>0?'+'+diff:diff)+'</div></div></div><div style="margin-top:8px;font-size:12px;color:#888780;text-align:center">'+k.name+': <strong>'+k.pts+' pts</strong></div>';
+  toast('Saved ☁️');
+}
+function resetHist(){if(!confirm('Reset all tasks?'))return;hTasks=hTasks.map(function(t){return Object.assign({},t,{done:false});});renderHistTasks();saveHist();}
+function renderHistBonuses(){
+  const el=document.getElementById('hist-bonuses');if(!el)return;
+  const k=S.kids[hKidI],dk=hDate;
+  const bonuses=(k.history[dk]&&k.history[dk].bonuses)||[];
+  const log=(S.bonusLog||[]).filter(function(b){return b.kidIdx===hKidI&&new Date(b.date).toDateString()===dk;});
+  const seen=new Set();
+  const all=[...bonuses,...log.map(function(b){return {task:b.task,pts:b.pts};})].filter(function(b){const key=b.task+'|'+b.pts;if(seen.has(key))return false;seen.add(key);return true;});
+  el.innerHTML=all.length?all.map(function(b){return '<div class="row"><div style="font-size:16px">✨</div><div style="flex:1"><div style="font-size:13px;font-weight:700">'+(b.task||b.reason||'')+'</div><div class="muted" style="font-size:11px">Bonus — not in streak</div></div><span class="pill p4">+'+b.pts+'pt</span></div>';}).join(''):'<p class="muted" style="font-size:12px;padding:4px 0">No bonuses for this day</p>';
+}
+function renderHistPunishments(){
+  const el=document.getElementById('hist-punishments');if(!el)return;
+  const k=S.kids[hKidI],dk=hDate;
+  const punishments=(k.history[dk]&&k.history[dk].punishments)||[];
+  const log=(S.punishLog||[]).filter(function(p){return p.kidIdx===hKidI&&new Date(p.date).toDateString()===dk;});
+  const seen=new Set();
+  const all=[...punishments,...log.map(function(p){return {reason:p.reason,pts:p.pts,days:p.days,type:p.type};})].filter(function(p){const key=p.reason+'|'+p.type;if(seen.has(key))return false;seen.add(key);return true;});
+  el.innerHTML=all.length?all.map(function(p){return '<div class="row"><div style="font-size:16px">⚡</div><div style="flex:1"><div style="font-size:13px;font-weight:700">'+(p.reason||'')+'</div><div class="muted" style="font-size:11px">'+(p.type==='deduct'?'Points deducted':'Screen lock '+p.days+'d')+'</div></div><span class="pill pr">'+(p.type==='deduct'?'-'+p.pts+'pt':p.days+'d')+'</span></div>';}).join(''):'<p class="muted" style="font-size:12px;padding:4px 0">No punishments for this day</p>';
+}
+function parentGrant(){
+  const sel=document.getElementById('hist-rew-sel'),ri=parseInt(sel.value);
+  if(isNaN(ri)||!S.rewards[ri]){toast('Select a reward');return;}
+  const r=S.rewards[ri],k=S.kids[hKidI];
+  if(k.pts<r.c){toast('Not enough pts ('+k.pts+'/'+r.c+')');return;}
+  k.pts=Math.max(0,k.pts-r.c);
+  S.redemptions.push({id:Date.now(),rewardIdx:ri,kidIdx:hKidI,joint:false,status:'approved',parentGranted:true,createdAt:new Date(hDate).toISOString(),resolvedAt:new Date().toISOString()});
+  sel.value='';save();toast(r.t+' granted! -'+r.c+' pts ☁️');
+}
+
+// STREAK RECALC (no save - caller handles)
+function recalcStreaks(){
+  [0,1].forEach(function(ki){
+    const k=S.kids[ki],hist=k.history||{};
+    const dates=Object.keys(hist).sort(function(a,b){return new Date(a)-new Date(b);});
+    let ps=0,ss=0;
+    dates.forEach(function(dk){
+      const day=hist[dk];
+      if(day.pts>=23)ps++;else ps=0;
+      const sd=day.solatComplete!==undefined?day.solatComplete:(day.solatBonus||solatDoneSnap(day.tasks));
+      day.solatComplete=sd;
+      if(sd)ss++;else ss=0;
+    });
+    k.streak=ps;k.solatStreak=ss;
+    k.solat7Awarded=Math.floor(ss/7);k.solat30Awarded=Math.floor(ss/30);
+  });
+}
+
+// BATTLE
+function renderBattle(){
+  const k0=S.kids[0],k1=S.kids[1];
+  const t0=totalEarned(0),t1=totalEarned(1);
+  const max=Math.max(k0.monthPts||1,k1.monthPts||1,1);
+  const w0=Math.round(((k0.monthPts||0)/max)*100),w1=Math.round(((k1.monthPts||0)/max)*100);
+  const lead=k0.monthPts>k1.monthPts?0:k1.monthPts>k0.monthPts?1:-1;
+  const mn=new Date().toLocaleString('default',{month:'long'});
+  document.getElementById('battle-body').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'+
+    '<div style="text-align:center;padding:12px;background:'+(lead===0?'#FFF9E6':'#F8F7F4')+';border-radius:12px;border:'+(lead===0?'2px solid #EF9F27':'0.5px solid #E8E6DF')+'"><div style="font-size:22px">🌙</div><div style="font-weight:700;font-size:13px">'+k0.name+'</div><div style="font-size:22px;font-weight:800;color:#FF6B6B">'+(k0.monthPts||0)+'</div><div class="muted" style="font-size:10px">'+mn+' earned</div><div class="muted" style="font-size:10px;margin-top:2px">💰 '+k0.pts+' · ⭐ '+t0+'</div><div class="muted" style="font-size:10px">🤲 '+(k0.solatStreak||0)+' solat</div>'+(lead===0?'<div style="font-size:11px;font-weight:700;color:#854F0B;margin-top:4px">👑 Leading</div>':'')+'</div>'+
+    '<div style="text-align:center;padding:12px;background:'+(lead===1?'#FFF9E6':'#F8F7F4')+';border-radius:12px;border:'+(lead===1?'2px solid #EF9F27':'0.5px solid #E8E6DF')+'"><div style="font-size:22px">🌸</div><div style="font-weight:700;font-size:13px">'+k1.name+'</div><div style="font-size:22px;font-weight:800;color:#7F77DD">'+(k1.monthPts||0)+'</div><div class="muted" style="font-size:10px">'+mn+' earned</div><div class="muted" style="font-size:10px;margin-top:2px">💰 '+k1.pts+' · ⭐ '+t1+'</div><div class="muted" style="font-size:10px">🤲 '+(k1.solatStreak||0)+' solat</div>'+(lead===1?'<div style="font-size:11px;font-weight:700;color:#854F0B;margin-top:4px">👑 Leading</div>':'')+'</div></div>'+
+    '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:700;color:#888780">🌙 '+k0.name+'</span><span style="font-size:12px;color:#888780">'+(k0.monthPts||0)+' pts</span></div><div style="background:#E8E6DF;border-radius:6px;height:10px;overflow:hidden"><div style="width:'+w0+'%;background:#FF6B6B;height:10px;border-radius:6px"></div></div></div>'+
+    '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:700;color:#888780">🌸 '+k1.name+'</span><span style="font-size:12px;color:#888780">'+(k1.monthPts||0)+' pts</span></div><div style="background:#E8E6DF;border-radius:6px;height:10px;overflow:hidden"><div style="width:'+w1+'%;background:#7F77DD;height:10px;border-radius:6px"></div></div></div>'+
+    '<div style="background:#F8F7F4;border-radius:10px;padding:10px;text-align:center;font-size:12px;color:#888780">Winner gets <strong>+20 pts</strong> at month end 🏆</div>';
+}
+
+// AWARDS
+function giveBonus(){
+  const reason=document.getElementById('b-reason').value.trim();
+  const date=document.getElementById('b-date').value;
+  const pts=parseInt(document.getElementById('b-pts').value);
+  if(!reason){toast('Enter reason');return;}if(!date){toast('Select date');return;}if(isNaN(pts)||pts<=0){toast('Enter valid points');return;}
+  const k=S.kids[bonusKidI];
+  k.pts+=pts;k.monthPts=(k.monthPts||0)+pts;
+  S.bonusLog.push({id:Date.now(),kidIdx:bonusKidI,task:reason,date:date,pts:pts,addedAt:new Date().toISOString()});
+  const dk=new Date(date).toDateString();
+  if(!k.history[dk])k.history[dk]={tasks:[],pts:0,solatBonus:false,solatComplete:false};
+  k.history[dk].bonuses=k.history[dk].bonuses||[];
+  k.history[dk].bonuses.push({task:reason,pts:pts});
+  document.getElementById('b-reason').value='';document.getElementById('b-pts').value='';
+  save();renderBonusList();toast('✨ +'+pts+' pts to '+k.name+' ☁️');
+}
+function renderBonusList(){
+  const el=document.getElementById('bonus-list');if(!el)return;
+  const log=(S.bonusLog||[]).slice().reverse();
+  el.innerHTML=log.length?log.map(function(b,ri){
+    const i=S.bonusLog.length-1-ri;
+    const d=new Date(b.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return '<div class="row"><div style="flex:1"><div style="font-size:13px;font-weight:700">'+(b.task||'')+'</div><div class="muted" style="font-size:11px">'+(S.kids[b.kidIdx]?S.kids[b.kidIdx].name:'?')+' · '+d+'</div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill p4">+'+b.pts+'pt</span><button onclick="removeBonus('+i+')" style="background:none;border:none;cursor:pointer;font-size:16px;color:#E24B4A">×</button></div></div>';
+  }).join(''):'<p class="muted" style="text-align:center;padding:10px">No bonuses yet</p>';
+}
+function removeBonus(i){
+  if(!confirm('Remove? Points deducted.'))return;
+  const b=S.bonusLog[i],k=S.kids[b.kidIdx];
+  k.pts=Math.max(0,k.pts-b.pts);k.monthPts=Math.max(0,(k.monthPts||0)-b.pts);
+  const dk=new Date(b.date).toDateString();
+  if(k.history[dk]&&k.history[dk].bonuses){const bi=k.history[dk].bonuses.findIndex(function(x){return x.task===b.task&&x.pts===b.pts;});if(bi>=0)k.history[dk].bonuses.splice(bi,1);}
+  S.bonusLog.splice(i,1);save();renderBonusList();toast('Removed, points deducted');
+}
+function togglePunishType(){
+  const t=document.getElementById('p-type').value;
+  document.getElementById('p-pts-row').style.display=t==='deduct'?'block':'none';
+  document.getElementById('p-days-row').style.display=t==='screenlock'?'block':'none';
+}
+function givePunish(){
+  const type=document.getElementById('p-type').value;
+  const reason=document.getElementById('p-reason').value.trim();
+  const date=document.getElementById('p-date').value;
+  if(!reason){toast('Enter reason');return;}if(!date){toast('Select date');return;}
+  const k=S.kids[punishKidI];
+  if(type==='deduct'){
+    const pts=parseInt(document.getElementById('p-pts').value);
+    if(isNaN(pts)||pts<=0){toast('Enter valid points');return;}
+    k.pts=Math.max(0,k.pts-pts);
+    const entry={id:Date.now(),kidIdx:punishKidI,type:'deduct',reason:reason,date:date,pts:pts,addedAt:new Date().toISOString()};
+    S.punishLog.push(entry);
+    const dk=new Date(date).toDateString();
+    if(!k.history[dk])k.history[dk]={tasks:[],pts:0,solatBonus:false,solatComplete:false};
+    k.history[dk].punishments=k.history[dk].punishments||[];
+    k.history[dk].punishments.push({reason:reason,pts:pts,type:'deduct'});
+    save();renderPunishList();toast('⚡ -'+pts+' pts applied to '+k.name);
+  }else{
+    const days=parseInt(document.getElementById('p-days').value);
+    if(isNaN(days)||days<=0){toast('Enter valid days');return;}
+    const start=new Date(date),end=new Date(start);end.setDate(end.getDate()+days-1);
+    const entry={id:Date.now(),kidIdx:punishKidI,type:'screenlock',reason:reason,date:date,days:days,startISO:start.toISOString().slice(0,10),endISO:end.toISOString().slice(0,10),addedAt:new Date().toISOString()};
+    S.punishLog.push(entry);
+    const dk=start.toDateString();
+    if(!k.history[dk])k.history[dk]={tasks:[],pts:0,solatBonus:false,solatComplete:false};
+    k.history[dk].punishments=k.history[dk].punishments||[];
+    k.history[dk].punishments.push({reason:reason,days:days,type:'screenlock'});
+    save();renderPunishList();toast('⚡ Screen locked '+days+'d for '+k.name);
+  }
+  document.getElementById('p-reason').value='';document.getElementById('p-pts').value='';document.getElementById('p-days').value='';
+}
+function renderPunishList(){
+  const el=document.getElementById('punish-list');if(!el)return;
+  const log=(S.punishLog||[]).slice().reverse();
+  const today=todayISO();
+  el.innerHTML=log.length?log.map(function(p,ri){
+    const i=S.punishLog.length-1-ri;
+    const d=new Date(p.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const active=p.type==='screenlock'&&p.endISO>=today;
+    return '<div class="row"><div style="flex:1"><div style="font-size:13px;font-weight:700">'+(p.reason||'')+'</div><div class="muted" style="font-size:11px">'+(S.kids[p.kidIdx]?S.kids[p.kidIdx].name:'?')+' · '+d+' · '+(p.type==='deduct'?'-'+p.pts+' pts':'Screen lock '+p.days+'d')+(active?' · <span style="color:#E24B4A;font-weight:700">ACTIVE</span>':'')+'</div></div><button onclick="removePunish('+i+')" style="background:none;border:none;cursor:pointer;font-size:16px;color:#E24B4A">×</button></div>';
+  }).join(''):'<p class="muted" style="text-align:center;padding:10px">No punishments yet</p>';
+}
+function removePunish(i){
+  if(!confirm('Remove? Points restored if deduction.'))return;
+  const p=S.punishLog[i],k=S.kids[p.kidIdx];
+  if(p.type==='deduct'){k.pts+=p.pts;}
+  const dk=new Date(p.date).toDateString();
+  if(k.history[dk]&&k.history[dk].punishments){const pi=k.history[dk].punishments.findIndex(function(x){return x.reason===p.reason&&x.type===p.type;});if(pi>=0)k.history[dk].punishments.splice(pi,1);}
+  S.punishLog.splice(i,1);save();renderPunishList();toast('Removed'+(p.type==='deduct'?', pts restored':''));
+}
+function getScreenlock(kidI){
+  const today=todayISO();
+  const locks=(S.punishLog||[]).filter(function(p){return p.kidIdx===kidI&&p.type==='screenlock'&&p.endISO>=today;});
+  if(!locks.length)return null;
+  locks.sort(function(a,b){return b.endISO.localeCompare(a.endISO);});
+  const lock=locks[0];
+  const d=Math.round((new Date(lock.endISO)-new Date(today))/(1000*60*60*24))+1;
+  return{d:d,reason:lock.reason};
+}
+
+// REWARDS ADMIN
+function renderAdminRewards(){
+  fillSecDrops();
+  const el=document.getElementById('admin-rewards');if(!el)return;
+  const rsecs=[...new Set([...(S.rewardSections||[]),'General'])];
+  const grouped={};
+  S.rewards.forEach(function(r,i){const s=rsecs.includes(r.sec)?r.sec:'General';if(!grouped[s])grouped[s]=[];grouped[s].push({r:r,i:i});});
+  let html='';
+  rsecs.forEach(function(s){
+    if(!grouped[s]||!grouped[s].length)return;
+    html+='<div class="sec-hdr">'+s+'</div>';
+    grouped[s].forEach(function(item){
+      const r=item.r,i=item.i;
+      const rn=r.t.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const rsecOpts=rsecs.map(function(sv){return '<option value="'+sv+'"'+(sv===(r.sec||'General')?' selected':'')+'>'+sv+'</option>';}).join('');
+      html+='<div class="row"><div style="flex:1"><div id="rv'+i+'"><div style="font-size:13px;font-weight:700">'+r.t+'</div><div style="display:flex;gap:6px;align-items:center;margin-top:2px"><span class="pill p2">'+r.c+'pt</span><button onclick="openEditRew('+i+')" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;color:#4ECDC4;padding:0">✏️</button></div></div>';
+      html+='<div id="re'+i+'" style="display:none;padding:8px;background:#F8F7F4;border-radius:10px;margin-top:4px"><input type="text" id="rn'+i+'" value="'+rn+'" style="margin-bottom:6px"><input type="number" id="rp'+i+'" value="'+r.c+'" min="0" style="margin-bottom:6px"><select id="rs'+i+'" style="margin-bottom:8px">'+rsecOpts+'</select><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><button onclick="saveEditRew('+i+')" style="background:#4ECDC4;color:#fff;border:none;border-radius:8px;padding:7px;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;cursor:pointer">Save</button><button onclick="closeEditRew('+i+')" style="background:#D3D1C7;color:#2C2C2A;border:none;border-radius:8px;padding:7px;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;cursor:pointer">Cancel</button></div></div>';
+      html+='</div><button onclick="rmReward('+i+')" style="background:none;border:none;cursor:pointer;font-size:18px;color:#E24B4A;flex-shrink:0">×</button></div>';
+    });
+  });
+  el.innerHTML=html||'<p class="muted" style="text-align:center;padding:10px">No rewards</p>';
+}
+function openEditRew(i){document.getElementById('rv'+i).style.display='none';document.getElementById('re'+i).style.display='block';}
+function closeEditRew(i){document.getElementById('rv'+i).style.display='';document.getElementById('re'+i).style.display='none';}
+function saveEditRew(i){
+  const n=document.getElementById('rn'+i).value.trim();
+  const c=parseInt(document.getElementById('rp'+i).value);
+  const s=document.getElementById('rs'+i).value;
+  if(!n){toast('Name required');return;}if(isNaN(c)||c<0){toast('Invalid pts');return;}
+  S.rewards[i].t=n;S.rewards[i].c=c;S.rewards[i].sec=s;save();renderAdminRewards();toast('Saved ☁️');
+}
+function addReward(){
+  const n=document.getElementById('nr-name').value.trim();
+  const c=parseInt(document.getElementById('nr-pts').value);
+  const s=document.getElementById('nr-sec').value||'General';
+  if(!n||isNaN(c)||c<0)return;
+  S.rewards.push({t:n,c:c,sec:s});
+  document.getElementById('nr-name').value='';document.getElementById('nr-pts').value='';
+  save();renderAdminRewards();
+}
+function rmReward(i){S.rewards.splice(i,1);save();renderAdminRewards();}
+
+// REDEEM PANEL
+function renderRedeemPanel(){
+  midnightCutoff();updateBadge();
+  const pending=S.redemptions.filter(function(r){return r.status==='pending'&&(!r.joint||r.jointStatus==='accepted');});
+  const pel=document.getElementById('pending-list');
+  if(pel)pel.innerHTML=pending.length?pending.map(function(req){
+    const r=S.rewards[req.rewardIdx]||{t:'?',c:0};
+    const k=S.kids[req.kidIdx];
+    const half=Math.ceil(r.c/2);
+    const ai=S.redemptions.indexOf(req);
+    const time=new Date(req.createdAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="pbox"><div style="font-weight:700;font-size:14px;margin-bottom:2px">'+r.t+'</div><div class="muted" style="font-size:12px;margin-bottom:8px">'+(req.joint?'Split: '+k.name+' + '+S.kids[req.jointKidIdx].name+' ('+half+' pts each)':k.name+' solo ('+r.c+' pts)')+' · '+time+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button onclick="approveRedeem('+ai+')" style="background:#4ECDC4;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Nunito,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✓ Approve</button><button onclick="rejectRedeem('+ai+')" style="background:#E24B4A;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Nunito,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✗ Reject</button></div></div>';
+  }).join(''):'<p class="muted" style="text-align:center;padding:10px">No pending requests</p>';
+  const ms=todayISO().slice(0,7);
+  const hel=document.getElementById('granted-hist');
+  if(hel){
+    let h='';
+    [0,1].forEach(function(ki){
+      const gr=S.redemptions.filter(function(r){return r.status==='approved'&&r.resolvedAt&&r.resolvedAt.slice(0,7)===ms&&(r.kidIdx===ki||(r.joint&&r.jointKidIdx===ki));});
+      h+='<div style="font-weight:700;font-size:13px;margin-bottom:4px;margin-top:'+(ki>0?'10px':'0')+'">'+S.kids[ki].name+'</div>';
+      h+=gr.length?gr.map(function(req){const r=S.rewards[req.rewardIdx]||{t:'Unknown'};const d=new Date(req.resolvedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'});return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #E8E6DF"><div style="font-size:13px">'+r.t+(req.joint?' 🤝':'')+'</div><div class="muted" style="font-size:11px">'+d+'</div></div>';}).join(''):'<p class="muted" style="font-size:12px;padding:3px 0">None yet</p>';
+    });
+    hel.innerHTML=h;
+  }
+}
+
+// REPORTS
+function renderReports(){
+  const mn=new Date().toLocaleString('default',{month:'long'});
+  document.getElementById('rep-stats').innerHTML=S.kids.map(function(k,ki){
+    const te=totalEarned(ki);
+    return '<div style="background:#F8F7F4;border-radius:12px;padding:12px;text-align:center"><div style="font-weight:700;font-size:14px">'+k.name+'</div><div style="font-size:11px;font-weight:700;color:#888780;margin-top:6px">💰 BALANCE</div><div style="font-size:18px;font-weight:800;color:#FF6B6B">'+k.pts+'</div><div style="font-size:11px;font-weight:700;color:#888780;margin-top:4px">📅 '+mn.toUpperCase()+'</div><div style="font-size:18px;font-weight:800;color:#7F77DD">'+(k.monthPts||0)+'</div><div style="font-size:11px;font-weight:700;color:#888780;margin-top:4px">⭐ ALL TIME</div><div style="font-size:18px;font-weight:800;color:#633806">'+te+'</div><div style="margin-top:8px"><div style="font-weight:700;color:#FF6B6B;font-size:12px">🔥 '+k.streak+' streak</div><div style="font-weight:700;color:#1D9E75;font-size:12px">🤲 '+(k.solatStreak||0)+' solat</div><div class="muted" style="font-size:11px">🏆 '+(k.monthWins||0)+' wins</div></div></div>';
+  }).join('');
+  document.getElementById('rep-badges').innerHTML=S.kids.map(function(k){
+    return '<div style="margin-bottom:10px"><div style="font-weight:700;margin-bottom:4px">'+k.name+' — badges</div><div>'+k.badges.map(function(bid){const b=BDEFS.find(function(x){return x.id===bid;});return b?'<span style="margin-right:6px;font-size:13px">'+b.e+' '+b.n+'</span>':'';}).join('')+'</div></div>';
+  }).join('');
+}
+function dlReport(){
+  const now=new Date(),month=now.toLocaleString('default',{month:'long',year:'numeric'});
+  let h='<html><head><style>body{font-family:Arial,sans-serif;padding:32px;color:#222}h1{color:#FF6B6B}h2{color:#7F77DD;margin-top:20px}</style></head><body><h1>⭐ Star Chart — '+month+'</h1>';
+  S.kids.forEach(function(k,ki){h+='<h2>'+(ki===0?'🌙':'🌸')+' '+k.name+'</h2><p>⭐ '+k.pts+' balance · 📅 '+(k.monthPts||0)+' this month · ⭐ '+totalEarned(ki)+' all time</p><p>🔥 '+k.streak+' streak · 🤲 '+(k.solatStreak||0)+' solat streak</p><p>'+k.badges.map(function(bid){const b=BDEFS.find(function(x){return x.id===bid;});return b?b.e+' '+b.n:'';}).join(' · ')+'</p><ul>'+S.tasks[ki].map(function(t){return '<li>'+t.t+' — '+t.p+'pt'+(t.done?' ✓':'')+'</li>';}).join('')+'</ul>';});
+  h+='</body></html>';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'text/html'}));a.download='starchart-'+now.getFullYear()+'-'+(now.getMonth()+1)+'.html';a.click();
+}
+
+// SETTINGS
+function saveNames(){
+  const n0=document.getElementById('s-n0').value.trim();
+  const n1=document.getElementById('s-n1').value.trim();
+  if(n0)S.kids[0].name=n0;if(n1)S.kids[1].name=n1;
+  save();updateLoginUI();updatePNames();toast('Saved ☁️');
+}
+function changePass(){
+  const v=document.getElementById('s-pass').value.trim();if(!v)return;
+  S.pass=v;save();document.getElementById('s-pass').value='';toast('Password updated ☁️');
+}
+function updatePNames(){
+  [0,1].forEach(function(i){
+    ['vtk'+i+'n','hk'+i+'n','bk'+i+'n','pk'+i+'n'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=S.kids[i].name;});
+  });
+}
+
+// BACKUP
+function autoBackup(){
+  try{
+    const now=new Date();
+    const fn='starchart-backup-'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'.json';
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));a.download=fn;a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+    toast('Backup saved: '+fn);
+  }catch(e){}
+}
+
+// CONFETTI
+function bigConfetti(){
+  const c=document.getElementById('cw');
+  const cols=['#FF6B6B','#4ECDC4','#FFE66D','#A8E6CF','#7F77DD','#EF9F27'];
+  for(var i=0;i<60;i++){
+    var p=document.createElement('div');p.className='cp';
+    p.style.cssText='left:'+Math.random()*100+'%;background:'+cols[i%6]+';animation-delay:'+Math.random()*0.8+'s;animation-duration:'+(1.2+Math.random()*0.8)+'s';
+    c.appendChild(p);setTimeout(function(el){return function(){el.remove();};}(p),3000);
+  }
+}
+
+// AUDIO
+var AC={ctx:null};
+function getAC(){if(!AC.ctx)AC.ctx=new(window.AudioContext||window.webkitAudioContext)();return AC.ctx;}
+function tone(f,type,s,d,v){try{var ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=type;o.frequency.setValueAtTime(f,ctx.currentTime+s);g.gain.setValueAtTime(0,ctx.currentTime+s);g.gain.linearRampToValueAtTime(v||0.3,ctx.currentTime+s+0.01);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+s+d);o.start(ctx.currentTime+s);o.stop(ctx.currentTime+s+d+0.05);}catch(e){}}
+function soundTick(){tone(880,'sine',0,0.08,0.15);}
+function soundAllDone(){tone(523,'sine',0,0.18,0.3);tone(659,'sine',0.18,0.18,0.3);tone(784,'sine',0.36,0.3,0.35);tone(1047,'sine',0.66,0.5,0.4);}
+function soundSolat(){tone(528,'sine',0,0.4,0.25);tone(660,'sine',0.1,0.4,0.2);tone(792,'sine',0.2,0.5,0.2);}
+function soundPB(){try{var ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.setValueAtTime(200,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(800,ctx.currentTime+0.4);g.gain.setValueAtTime(0.2,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start(ctx.currentTime);o.stop(ctx.currentTime+0.6);}catch(e){}}
+function soundGranted(){tone(784,'sine',0,0.15,0.3);tone(988,'sine',0.15,0.15,0.3);tone(1175,'sine',0.3,0.4,0.35);}
+function soundRejected(){tone(330,'sine',0,0.2,0.2);tone(294,'sine',0.2,0.3,0.15);}
+function soundWinner(){tone(523,'sine',0,0.15,0.3);tone(659,'sine',0.15,0.15,0.3);tone(784,'sine',0.3,0.15,0.3);tone(1047,'sine',0.45,0.3,0.4);tone(1319,'sine',0.9,0.7,0.5);}
+
+init();
+</script>
+</body>
+</html>
